@@ -1,0 +1,21 @@
+notifications:
+  email: false
+language: python
+python:
+- '3.5'
+- '3.6'
+- 'pypy3.5'
+install:
+- pip install -U tox-travis
+- pip install -e .[dev]
+script: tox
+deploy:
+  provider: pypi
+  distributions: sdist bdist_wheel
+  user: OpenXbox
+  password:
+    secure: t0+Mxgy7CK0RyFRu9sNBXgEVJ/6h1d9ABpXFoelEQsiR2b3UlYKwnUW7c8r74TN2VSJNvC8kAiylQmrXXaNpXWKIqqWuRF8HV+0r4T7lGxl4rr6hls/Y4fYCQyjCdvd+EFl0bbVFNTLQzbo4Xwh8HFu+IZZr0xsfzH70i1o9p3PUtu+tZxw9xu5pMutYvK7w6UEX1Wrlaj6oiD42VlBXrqD5UKU96e+9VOo8QxCRUdNZYvfGq+IewbggN6tlGoo7ExEW75vZPvon3j4q2AWmBEHBbTsowtUK9w67vaakQFN9yRWNdDN38mQaAEMvjR9814V3CCOzmvu7sFFZ3yPHIuyFlfow4mpfFzSofGtC5ZyVkRss/BV8VwGM83jWNN9RM9AUl5KQXtlFZmfKG1YGvU2fQQuMWiiA/NR2hiATC4yuStHvLHgMX3YCvZCpionvu8JWs8CVLX782BMfuHkzn7ilIaWxAihZry7hBvCA4cyBWnIpZDEV3zme3WyQZ3ymGqMT6K62McJx2MPYEwdb/sRsg6auojd914kUnoTLVS2vLGIVJ2YkvbjQufBuV/P01kobhceC1r+r6bjcwpt3syA+jyHlvyE7kta9QshERd7KI6krw408Onb+/C+YlJlVZZ8Qq3qjxT6wFCBiIoCQNaJAF3e/aICeqhyFKNVO8S0=
+  on:
+    tags: true
+    branch: master
+    python: 3.6
