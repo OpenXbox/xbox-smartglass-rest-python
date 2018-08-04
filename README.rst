@@ -63,7 +63,7 @@ Usual usage:
 ::
 
     # Read tokens from appdirs location
-    http://localhost:5557/authentication_refresh
+    http://localhost:5557/authentication/refresh
     # (Optional) Poweron console
     http://localhost:5557/<liveid>/poweron
     # Enumerate devices on network
