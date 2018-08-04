@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from functools import wraps
 
+import xbox.rest
 from xbox.rest.scripts import TOKENS_FILE
 from xbox.webapi.authentication.manager import AuthenticationManager
 from xbox.sg import enum
@@ -524,12 +525,12 @@ def text_send(console, text):
 
 @app.route('/')
 def webroot():
-    routes = []
 
+    routes = []
     for rule in app.url_map.iter_rules():
         routes.append('%s' % rule)
 
-    return jsonify(sorted(routes))
+    return success(endpoints=sorted(routes), version=xbox.rest.__version__)
 
 console_cache = {}
 authentication_mgr = AuthenticationManager()
