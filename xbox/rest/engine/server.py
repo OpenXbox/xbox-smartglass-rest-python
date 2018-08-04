@@ -76,6 +76,34 @@ class ConsoleWrap(object):
         return self.console.device_status
 
     @property
+    def authenticated_users_allowed(self):
+        if not self.console:
+            return None
+
+        return self.console.authenticated_users_allowed
+
+    @property
+    def console_users_allowed(self):
+        if not self.console:
+            return None
+
+        return self.console.console_users_allowed
+
+    @property
+    def anonymous_connection_allowed(self):
+        if not self.console:
+            return None
+
+        return self.console.anonymous_connection_allowed
+
+    @property
+    def is_certificate_pending(self):
+        if not self.console:
+            return None
+
+        return self.console.is_certificate_pending
+
+    @property
     def console_status(self):
         status_json = {}
 
@@ -201,6 +229,10 @@ class ConsoleWrap(object):
             'connection_state': self.connection_state.name,
             'pairing_state': self.pairing_state.name,
             'device_status': self.device_status.name,
+            'authenticated_users_allowed': self.authenticated_users_allowed,
+            'console_users_allowed': self.console_users_allowed,
+            'anonymous_connection_allowed': self.anonymous_connection_allowed,
+            'is_certificate_pending': self.is_certificate_pending
         })
 
         return data
