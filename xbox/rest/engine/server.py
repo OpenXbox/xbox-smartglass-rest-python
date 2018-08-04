@@ -319,7 +319,24 @@ def device_overview():
     return success(**data)
 
 
-@app.route('/authentication_refresh')
+@app.route('/authentication')
+def authentication_overview():
+    tokens = {
+        'access_token': authentication_mgr.access_token,
+        'refresh_token': authentication_mgr.refresh_token,
+        'user_token': authentication_mgr.user_token,
+        'xsts_token': authentication_mgr.xsts_token
+    }
+
+    data = {}
+    for k, v in tokens.items():
+        data.update({k: v.to_dict() if v else None})
+    userinfo = authentication_mgr.userinfo.to_dict() if authentication_mgr.userinfo else None
+
+    return success(tokens=data, userinfo=userinfo, authenticated=authentication_mgr.authenticated)
+
+
+@app.route('/authentication/refresh')
 def authentication_refresh():
     try:
         authentication_mgr.load(TOKENS_FILE)
