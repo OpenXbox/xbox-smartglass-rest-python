@@ -5,7 +5,7 @@ from gevent import wsgi
 import argparse
 from xbox.rest.engine.server import app
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description="Xbox One SmartGlass REST server")
     parser.add_argument('--address', '-a', default='0.0.0.0',
                         help='IP address to bind to')
@@ -19,3 +19,6 @@ if __name__ == '__main__':
         server.server_host, server.server_port
     ))
     server.serve_forever()
+
+if __name__ == '__main__':
+    main()
