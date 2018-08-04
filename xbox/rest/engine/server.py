@@ -165,6 +165,29 @@ class ConsoleWrap(object):
 
         return self.console.text.got_active_session
 
+    @property
+    def nano_status(self):
+        if not self.usable or 'nano' not in self.console.managers:
+            return None
+
+        nano = self.console.nano
+        data = {
+            'client_major_version': nano.client_major_version,
+            'client_minor_version': nano.client_minor_version,
+            'server_major_version': nano.server_major_version,
+            'server_minor_version': nano.server_minor_version,
+            'session_id': nano.session_id,
+            'stream_can_be_enabled': nano.stream_can_be_enabled,
+            'stream_enabled': nano.stream_enabled,
+            'stream_state': nano.stream_state,
+            'transmit_linkspeed': nano.transmit_linkspeed,
+            'wireless': nano.wireless,
+            'wireless_channel': nano.wireless_channel,
+            'udp_port': nano.udp_port,
+            'tcp_port': nano.tcp_port
+        }
+        return data
+
     def to_dict(self):
         if not self.console:
             return {
@@ -235,6 +258,12 @@ class ConsoleWrap(object):
         self.console.send_systemtext_input(text)
         self.console.finish_text_input()
         return True
+
+    def nano_start(self):
+        self.console.nano.start_stream()
+
+    def nano_stop(self):
+        self.console.nano.stop_stream()
 
 
 def error(message, **kwargs):
@@ -538,6 +567,27 @@ def text_overview(console):
 def text_send(console, text):
     console.send_text(text)
     return success()
+
+"""
+@app.route('/devices/<liveid>/nano')
+@console_connected
+def nano_overview(console):
+    return success(**{'nano_status': console.nano_status})
+
+
+@app.route('/devices/<liveid>/nano/start')
+@console_connected
+def nano_start(console):
+    console.nano_start()
+    return success()
+
+
+@app.route('/devices/<liveid>/nano/stop')
+@console_connected
+def nano_stop(console):
+    console.nano_stop()
+    return success()
+"""
 
 
 @app.route('/')
