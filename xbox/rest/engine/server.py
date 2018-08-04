@@ -187,6 +187,27 @@ class ConsoleWrap(object):
         return self.console.stump.request_stump_configuration()
 
     @property
+    def headend_info(self):
+        if not self.usable:
+            return None
+
+        return self.console.stump.request_headend_info()
+
+    @property
+    def livetv_info(self):
+        if not self.usable:
+            return None
+
+        return self.console.stump.request_live_tv_info()
+
+    @property
+    def tuner_lineups(self):
+        if not self.usable:
+            return None
+
+        return self.console.stump.request_tuner_lineups()
+
+    @property
     def text_active(self):
         if not self.usable:
             return None
@@ -586,6 +607,24 @@ def input_send_button(console, button):
 
     console.send_gamepad_button(btn)
     return success()
+
+
+@app.route('/devices/<liveid>/stump/headend')
+@console_connected
+def stump_headend_info(console):
+    return success(**{'headend_info': console.headend_info.params.dump()})
+
+
+@app.route('/devices/<liveid>/stump/livetv')
+@console_connected
+def stump_livetv_info(console):
+    return success(**{'livetv_info': console.livetv_info.params.dump()})
+
+
+@app.route('/devices/<liveid>/stump/tuner_lineups')
+@console_connected
+def stump_tuner_lineups(console):
+    return success(**{'tuner_lineups': console.tuner_lineups.params.dump()})
 
 
 @app.route('/devices/<liveid>/text')
