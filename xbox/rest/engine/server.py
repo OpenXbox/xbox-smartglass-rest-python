@@ -107,7 +107,7 @@ class ConsoleWrap(object):
     def console_status(self):
         status_json = {}
 
-        if not self.console:
+        if not self.console or not self.console.console_status:
             return None
 
         status = self.console.console_status
@@ -160,22 +160,23 @@ class ConsoleWrap(object):
 
         metadata = {}
         for meta in media_state.metadata:
-            metadata.update({meta.name: meta.value})
+            metadata[meta.name] = meta.value
 
-        media_state['metadata'] = metadata
+        media_state_json['metadata'] = metadata
         return media_state_json
 
     @property
     def status(self):
-        data = {
+        data = self.console.to_dict()
+        data.update({
             'connection_state': self.connection_state.name,
             'pairing_state': self.pairing_state.name,
             'device_status': self.device_status.name,
-            'console_status': None
-        }
-
-        if self.usable and self.console.console_status:
-            data['console_status'] = self.console_status
+            'authenticated_users_allowed': self.authenticated_users_allowed,
+            'console_users_allowed': self.console_users_allowed,
+            'anonymous_connection_allowed': self.anonymous_connection_allowed,
+            'is_certificate_pending': self.is_certificate_pending
+        })
 
         return data
 
@@ -235,27 +236,6 @@ class ConsoleWrap(object):
             'udp_port': nano.udp_port,
             'tcp_port': nano.tcp_port
         }
-        return data
-
-    def to_dict(self):
-        if not self.console:
-            return {
-                'connection_state': enum.ConnectionState.Disconnected,
-                'pairing_state': enum.PairedIdentityState.NotPaired,
-                'device_status': enum.DeviceStatus.Unavailable
-            }
-
-        data = self.console.to_dict()
-        data.update({
-            'connection_state': self.connection_state.name,
-            'pairing_state': self.pairing_state.name,
-            'device_status': self.device_status.name,
-            'authenticated_users_allowed': self.authenticated_users_allowed,
-            'console_users_allowed': self.console_users_allowed,
-            'anonymous_connection_allowed': self.anonymous_connection_allowed,
-            'is_certificate_pending': self.is_certificate_pending
-        })
-
         return data
 
     def connect(self):
@@ -375,32 +355,6 @@ Routes
 """
 
 
-@app.route('/devices')
-def device_overview():
-    discovered = ConsoleWrap.discover().copy()
-
-    liveids = [d.liveid for d in discovered]
-    for i, c in enumerate(console_cache.values()):
-        if c.liveid in liveids:
-            # Refresh existing entries
-            index = liveids.index(c.liveid)
-
-            if c.device_status != discovered[index].device_status:
-                console_cache[c.liveid] = ConsoleWrap(discovered[index])
-            del discovered[index]
-            del liveids[index]
-        elif c.liveid not in liveids:
-            # Set unresponsive consoles to Unavailable
-            console_cache[c.liveid].console.device_status = enum.DeviceStatus.Unavailable
-
-    # Extend by new entries
-    for d in discovered:
-        console_cache.update({d.liveid: ConsoleWrap(d)})
-
-    data = {console.liveid: console.to_dict() for console in console_cache.values()}
-    return success(**data)
-
-
 @app.route('/authentication')
 def authentication_overview():
     tokens = {
@@ -434,6 +388,32 @@ def authentication_refresh():
     return success()
 
 
+@app.route('/devices')
+def device_overview():
+    discovered = ConsoleWrap.discover().copy()
+
+    liveids = [d.liveid for d in discovered]
+    for i, c in enumerate(console_cache.values()):
+        if c.liveid in liveids:
+            # Refresh existing entries
+            index = liveids.index(c.liveid)
+
+            if c.device_status != discovered[index].device_status:
+                console_cache[c.liveid] = ConsoleWrap(discovered[index])
+            del discovered[index]
+            del liveids[index]
+        elif c.liveid not in liveids:
+            # Set unresponsive consoles to Unavailable
+            console_cache[c.liveid].console.device_status = enum.DeviceStatus.Unavailable
+
+    # Extend by new entries
+    for d in discovered:
+        console_cache.update({d.liveid: ConsoleWrap(d)})
+
+    data = {console.liveid: console.status for console in console_cache.values()}
+    return success(**{'devices': data})
+
+
 @app.route('/devices/<liveid>/poweron')
 def poweron(liveid):
     ConsoleWrap.power_on(liveid)
@@ -448,7 +428,7 @@ Require enumerated console
 @app.route('/devices/<liveid>')
 @console_exists
 def device_info(console):
-    return success(**console.to_dict())
+    return success(**{'device': console.status})
 
 
 @app.route('/devices/<liveid>/connect')
@@ -463,12 +443,6 @@ def force_connect(console):
         return error('Connection failed', connection_state=state.name)
 
     return success(connection_state=state.name)
-
-
-@app.route('/devices/<liveid>/status')
-@console_exists
-def status(console):
-    return success(**console.status)
 
 
 """
@@ -492,6 +466,12 @@ def poweroff(console):
         return success()
 
 
+@app.route('/devices/<liveid>/console_status')
+@console_connected
+def console_status(console):
+    return success(**{'console_status': console.console_status})
+
+
 @app.route('/devices/<liveid>/launch/<app_id>')
 @console_connected
 def launch_title(console, app_id):
@@ -502,11 +482,7 @@ def launch_title(console, app_id):
 @app.route('/devices/<liveid>/media_status')
 @console_connected
 def media_status(console):
-    media_status = console.media_status
-    if not media_status:
-        return error('Failed to get media status')
-
-    return success(**media_status)
+    return success(**{'media_status': console.media_status})
 
 
 @app.route('/devices/<liveid>/ir')
