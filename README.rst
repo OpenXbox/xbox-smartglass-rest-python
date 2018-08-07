@@ -65,11 +65,11 @@ Usual usage:
     # Read tokens from appdirs location
     http://localhost:5557/authentication/refresh
     # (Optional) Poweron console
-    http://localhost:5557/<liveid>/poweron
+    http://localhost:5557/devices/<liveid>/poweron
     # Enumerate devices on network
     http://localhost:5557/devices
     # Connect to console
-    http://localhost:5557/<liveid>/connect
+    http://localhost:5557/devices/<liveid>/connect
     # Use other API endpoints ...
 
 
