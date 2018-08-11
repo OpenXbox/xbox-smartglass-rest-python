@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, request, render_template, redirect
 from functools import wraps
 
-import xbox.rest
 from xbox.rest.scripts import TOKENS_FILE
 from xbox.webapi.authentication.manager import AuthenticationManager,\
     AuthenticationException, TwoFactorAuthRequired
@@ -282,7 +281,7 @@ class ConsoleWrap(object):
         print(result)
         return True
 
-    def send_media_command(self, command, seek_pos=None):
+    def send_media_command(self, command):
         title_id = 0
         request_id = 0
         self.console.media_command(title_id, command, request_id)
@@ -589,7 +588,7 @@ def device_overview():
         console_cache.update({d.liveid: ConsoleWrap(d)})
 
     data = {console.liveid: console.status for console in console_cache.values()}
-    return success(**{'devices': data})
+    return success(devices=data)
 
 
 @app.route('/devices/<liveid>/poweron')
@@ -606,7 +605,7 @@ Require enumerated console
 @app.route('/devices/<liveid>')
 @console_exists
 def device_info(console):
-    return success(**{'device': console.status})
+    return success(device=console.status)
 
 
 @app.route('/devices/<liveid>/connect', methods=['GET', 'POST'])
@@ -652,7 +651,7 @@ def poweroff(console):
 @app.route('/devices/<liveid>/console_status')
 @console_connected
 def console_status(console):
-    return success(**{'console_status': console.console_status})
+    return success(console_status=console.console_status)
 
 
 @app.route('/devices/<liveid>/launch/<app_id>')
@@ -665,7 +664,7 @@ def launch_title(console, app_id):
 @app.route('/devices/<liveid>/media_status')
 @console_connected
 def media_status(console):
-    return success(**{'media_status': console.media_status})
+    return success(media_status=console.media_status)
 
 
 @app.route('/devices/<liveid>/ir')
@@ -709,14 +708,14 @@ def infrared_available_keys(console, device_id):
                 'value': device_config.buttons[button]
             }
 
-        return success(**{
-            'device_type': device_config.device_type,
-            'device_brand': device_config.device_brand,
-            'device_model': device_config.device_model,
-            'device_name': device_config.device_name,
-            'device_id': device_config.device_id,
-            'buttons': button_links
-        })
+        return success(
+            device_type=device_config.device_type,
+            device_brand=device_config.device_brand,
+            device_model=device_config.device_model,
+            device_name=device_config.device_name,
+            device_id=device_config.device_id,
+            buttons=button_links
+        )
 
     return error('Device Id \'{0}\' not found'.format(device_id))
 
@@ -734,7 +733,7 @@ def infrared_send(console, device_id, button):
 @console_connected
 def media_overview(console):
     commands = [cmd.name for cmd in enum.MediaControlCommand]
-    return success(**{'commands': commands})
+    return success(commands=commands)
 
 
 @app.route('/devices/<liveid>/media/<command>')
@@ -760,7 +759,7 @@ def media_command_seek(console, seek_pos):
 @console_connected
 def input_overview(console):
     buttons = [btn.name for btn in enum.GamePadButton]
-    return success(**{'commands': buttons})
+    return success(buttons=buttons)
 
 
 @app.route('/devices/<liveid>/input/<button>')
@@ -778,25 +777,25 @@ def input_send_button(console, button):
 @app.route('/devices/<liveid>/stump/headend')
 @console_connected
 def stump_headend_info(console):
-    return success(**{'headend_info': console.headend_info.params.dump()})
+    return success(headend_info=console.headend_info.params.dump())
 
 
 @app.route('/devices/<liveid>/stump/livetv')
 @console_connected
 def stump_livetv_info(console):
-    return success(**{'livetv_info': console.livetv_info.params.dump()})
+    return success(livetv_info=console.livetv_info.params.dump())
 
 
 @app.route('/devices/<liveid>/stump/tuner_lineups')
 @console_connected
 def stump_tuner_lineups(console):
-    return success(**{'tuner_lineups': console.tuner_lineups.params.dump()})
+    return success(tuner_lineups=console.tuner_lineups.params.dump())
 
 
 @app.route('/devices/<liveid>/text')
 @console_connected
 def text_overview(console):
-    return success(**{'text_session_active': console.text_active})
+    return success(text_session_active=console.text_active)
 
 
 @app.route('/devices/<liveid>/text/<text>')
@@ -809,7 +808,7 @@ def text_send(console, text):
 @app.route('/devices/<liveid>/nano')
 @console_connected
 def nano_overview(console):
-    return success(**{'nano_status': console.nano_status})
+    return success(nano_status=console.nano_status)
 
 
 @app.route('/devices/<liveid>/nano/start')
@@ -838,7 +837,7 @@ def library_versions():
         except:
             versions[name] = None
 
-    return success(**{'versions': versions})
+    return success(versions=versions)
 
 
 @app.route('/')
@@ -848,7 +847,7 @@ def webroot():
     for rule in app.url_map.iter_rules():
         routes.append('%s' % rule)
 
-    return success(endpoints=sorted(routes), version=xbox.rest.__version__)
+    return success(endpoints=sorted(routes))
 
 
 def get_smartglass_packetnames():
