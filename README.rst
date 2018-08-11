@@ -94,7 +94,10 @@ Usual usage:
     # Enumerate devices on network
     http://localhost:5557/devices
     # Connect to console
+    # NOTE: You can POST to /connect with parameter: connect_anonymous=true
+    # .. if console allows it ..
     http://localhost:5557/devices/<liveid>/connect
+
     # Use other API endpoints ...
 
 
