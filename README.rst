@@ -102,6 +102,15 @@ Known issues
 ------------
 * Find, report and/or fix them ;)
 
+Bugreporting
+------------
+When reporting bugs, please make sure to provide the output of the following endpoint
+
+::
+
+    http://localhost:5557/versions
+
+
 Contribute
 ----------
 * Report bugs/suggest features

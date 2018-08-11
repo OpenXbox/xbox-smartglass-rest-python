@@ -805,6 +805,20 @@ def nano_stop(console):
 """
 
 
+@app.route('/versions')
+def library_versions():
+    import pkg_resources
+
+    versions = {}
+    for name in get_smartglass_packetnames():
+        try:
+            versions[name] = pkg_resources.get_distribution(name).version
+        except:
+            versions[name] = None
+
+    return success(**{'versions': versions})
+
+
 @app.route('/')
 def webroot():
 
@@ -813,6 +827,17 @@ def webroot():
         routes.append('%s' % rule)
 
     return success(endpoints=sorted(routes), version=xbox.rest.__version__)
+
+
+def get_smartglass_packetnames():
+    return [
+        'xbox-smartglass-core',
+        'xbox-smartglass-stump',
+        'xbox-smartglass-nano',
+        'xbox-smartglass-auxiliary',
+        'xbox-smartglass-rest',
+        'xbox-webapi'
+    ]
 
 console_cache = {}
 authentication_mgr = AuthenticationManager()
