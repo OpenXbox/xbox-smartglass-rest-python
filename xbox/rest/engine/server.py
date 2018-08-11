@@ -734,6 +734,13 @@ def media_command(console, command):
     return success()
 
 
+@app.route('/devices/<liveid>/media/Seek/<seek_position>')
+@console_connected
+def media_command_seek(console, seek_pos):
+    console.send_media_command(enum.MediaControlCommand.Seek, int(seek_pos))
+    return success()
+
+
 @app.route('/devices/<liveid>/input')
 @console_connected
 def input_overview(console):
