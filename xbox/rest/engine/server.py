@@ -239,16 +239,26 @@ class ConsoleWrap(object):
         }
         return data
 
-    def connect(self):
+    def connect(self, connect_anonymous):
+        userhash = ''
+        xtoken = ''
+
         if not self.console:
             return enum.ConnectionState.Disconnected
         elif self.console.connected:
             return enum.ConnectionState.Connected
-        elif not authentication_mgr.xsts_token:
-            raise Exception('No authentication tokens available, please authenticate!')
+        elif connect_anonymous and not self.anonymous_connection_allowed:
+            raise Exception('Requested anonymous connection is not allowed by console')
+        elif not connect_anonymous and (not authentication_mgr.xsts_token or
+                                        not authentication_mgr.userinfo or
+                                        not authentication_mgr.userinfo.userhash):
+            raise Exception('Authenticated connection requested but no authentication tokens available')
+        elif not connect_anonymous:
+            userhash = authentication_mgr.userinfo.userhash
+            xtoken = authentication_mgr.xsts_token.jwt
 
-        state = self.console.connect(userhash=authentication_mgr.userinfo.userhash,
-                                     xsts_token=authentication_mgr.xsts_token.jwt)
+        state = self.console.connect(userhash=userhash,
+                                     xsts_token=xtoken)
 
         if state == enum.ConnectionState.Connected:
             self.console.wait(0.5)
@@ -599,11 +609,16 @@ def device_info(console):
     return success(**{'device': console.status})
 
 
-@app.route('/devices/<liveid>/connect')
+@app.route('/devices/<liveid>/connect', methods=['GET', 'POST'])
 @console_exists
 def force_connect(console):
+    connect_anonymous = False
+
+    if request.method == 'POST':
+        connect_anonymous = True if request.form.get('connect_anonymous') else False
+
     try:
-        state = console.connect()
+        state = console.connect(connect_anonymous=connect_anonymous)
     except Exception as e:
         return error(str(e))
 
