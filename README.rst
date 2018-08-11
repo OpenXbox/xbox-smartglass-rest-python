@@ -35,23 +35,50 @@ Via pip:
 How to use
 ----------
 
-Authenticate first (Authentication provided by xbox-webapi-python):
-::
-
-    $ xbox-authenticate
-
-    # Alternative: Use the ncurses terminal ui, it has authentication integrated
-    $ xbox-tui
-
-    # If you want to authenticate via browser, use:
-    $ xbox-auth-via-browser
-
-
-Now, start the server:
+Start the server:
 ::
 
     $ xbox-rest-server
 
+
+Authentication
+--------------
+
+Authenticate from scratch
+::
+
+    For non-2FA enabled account: http://localhost:5557/authentication/login
+    For 2FA: http://localhost:5557/authentication/oauth
+
+    # Store tokens on valid authentication
+    http://localhost:5557/authentication/store
+
+Load tokens from disk
+::
+
+    http://localhost:5557/authentication/load
+    http://localhost:5557/authentication/refresh
+
+2FA OAuth - POST
+::
+
+    # Get authorize url
+    GET http://localhost:5557/authentication/authorization_url
+    Response-Parameters (JSON): authorization_url
+
+    # Submit redirect url
+    POST http://localhost:5557/authentication/oauth
+    Request-Parameters: redirect_uri
+
+Regular (non-2FA) login - POST
+::
+
+    POST http://localhost:5557/authentication/login
+    Request-Parameters: email, password
+
+
+General usage
+-------------
 
 To see all API endpoints:
 ::
@@ -62,8 +89,6 @@ To see all API endpoints:
 Usual usage:
 ::
 
-    # Read tokens from appdirs location
-    http://localhost:5557/authentication/refresh
     # (Optional) Poweron console
     http://localhost:5557/devices/<liveid>/poweron
     # Enumerate devices on network

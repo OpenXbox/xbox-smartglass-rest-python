@@ -1,9 +1,10 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, render_template, redirect
 from functools import wraps
 
 import xbox.rest
 from xbox.rest.scripts import TOKENS_FILE
-from xbox.webapi.authentication.manager import AuthenticationManager
+from xbox.webapi.authentication.manager import AuthenticationManager,\
+    AuthenticationException, TwoFactorAuthRequired
 from xbox.sg import enum
 from xbox.sg.console import Console
 from xbox.sg.manager import InputManager, TextManager, MediaManager
@@ -299,6 +300,15 @@ class ConsoleWrap(object):
         self.console.nano.stop_stream()
 
 
+def logged_in_gamertag():
+    return authentication_mgr.userinfo.gamertag if authentication_mgr.userinfo else '<UNKNOWN>'
+
+
+def reset_authentication():
+    global authentication_mgr
+    authentication_mgr = AuthenticationManager()
+
+
 def error(message, **kwargs):
     ret = {
         'success': False,
@@ -372,19 +382,177 @@ def authentication_overview():
     return success(tokens=data, userinfo=userinfo, authenticated=authentication_mgr.authenticated)
 
 
+@app.route('/authentication/login', methods=['GET', 'POST'])
+def authentication_login():
+    if request.method == 'POST':
+        is_webview = request.form.get('webview')
+        email_address = request.form.get('email')
+        password = request.form.get('password')
+
+        if authentication_mgr.authenticated:
+            return error('An account is already signed in.. please logout first')
+        elif not email_address or not password:
+            return error('No email or password parameter provided')
+
+        authentication_mgr.email_address = email_address
+        authentication_mgr.password = password
+
+        try:
+            authentication_mgr.authenticate()
+        except AuthenticationException as e:
+            if is_webview:
+                return render_template('auth_result.html',
+                                       title='Login fail',
+                                       result='Login failed',
+                                       message='Error: {0}!'.format(str(e)),
+                                       link_path='/authentication/login',
+                                       link_title='Try again')
+            else:
+                return error('Login failed! Error: {0}'.format(str(e)),
+                             two_factor_required=False)
+
+        except TwoFactorAuthRequired:
+            if is_webview:
+                return render_template('auth_result.html',
+                                       title='Login fail',
+                                       result='Login failed, 2FA required',
+                                       message='Please click the following link to authenticate via OAUTH',
+                                       link_path='/authentication/oauth',
+                                       link_title='Login via OAUTH')
+            else:
+                return error('Login failed, 2FA required!',
+                             two_factor_required=True)
+
+        if is_webview:
+            return render_template('auth_result.html',
+                                   title='Login success',
+                                   result='Login succeeded',
+                                   message='Welcome {}!'.format(logged_in_gamertag()),
+                                   link_path='/authentication/logout',
+                                   link_title='Logout')
+        else:
+            return success(message='Login success', gamertag=logged_in_gamertag())
+    elif request.method == 'GET':
+        if authentication_mgr.authenticated:
+            return render_template('auth_result.html',
+                                   title='Already signed in',
+                                   result='Already signed in',
+                                   message='You are already signed in, please logout first!',
+                                   link_path='/authentication/logout',
+                                   link_title='Logout')
+        else:
+            return render_template('login.html')
+
+
+@app.route('/authentication/logout', methods=['GET', 'POST'])
+def authentication_logout():
+    if request.method == 'POST':
+        is_webview = request.form.get('webview')
+        username = logged_in_gamertag()
+        reset_authentication()
+        if is_webview:
+            return render_template('auth_result.html',
+                                   title='Logout success',
+                                   result='Logout succeeded',
+                                   message='Goodbye {0}!'.format(username),
+                                   link_path='/authentication/login',
+                                   link_title='Login')
+        else:
+            return success(message='Logout succeeded')
+    elif request.method == 'GET':
+        if authentication_mgr.authenticated:
+            return render_template('logout.html', username=logged_in_gamertag())
+        else:
+            return render_template('auth_result.html',
+                                   title='Logout failed',
+                                   result='Logout failed',
+                                   message='You are currently not logged in',
+                                   link_path='/authentication/login',
+                                   link_title='Login')
+
+
+@app.route('/authentication/authorization_url')
+def authentication_get_auth_url():
+    return success(authorization_url=AuthenticationManager.generate_authorization_url())
+
+
+@app.route('/authentication/oauth', methods=['GET', 'POST'])
+def authentication_oauth():
+    if request.method == 'POST':
+        is_webview = request.form.get('webview')
+        reset_authentication()
+        redirect_uri = request.form.get('redirect_uri')
+        if not redirect_uri:
+            return error('Please provide redirect_url')
+
+        try:
+            access, refresh = AuthenticationManager.parse_redirect_url(redirect_uri)
+            authentication_mgr.access_token = access
+            authentication_mgr.refresh_token = refresh
+            authentication_mgr.authenticate(do_refresh=False)
+        except Exception as e:
+            if is_webview:
+                return render_template('auth_result.html',
+                                       title='Login fail',
+                                       result='Login failed',
+                                       message='Error message: {0}'.format(str(e)),
+                                       link_path='/authentication/login',
+                                       link_title='Try again')
+            else:
+                return error('Login failed, error: {0}'.format(str(e)))
+
+        if is_webview:
+            return render_template('auth_result.html',
+                                   title='Login success',
+                                   result='Login succeeded',
+                                   message='Welcome {}!'.format(logged_in_gamertag()),
+                                   link_path='/authentication/logout',
+                                   link_title='Logout')
+        else:
+            return success(message='Login success', gamertag=logged_in_gamertag())
+    elif request.method == 'GET':
+        if authentication_mgr.authenticated:
+            return render_template('auth_result.html',
+                                   title='Already signed in',
+                                   result='Already signed in',
+                                   message='You are already signed in, please logout first!',
+                                   link_path='/authentication/logout',
+                                   link_title='Logout')
+        else:
+            return render_template('login_oauth.html',
+                                   oauth_url=AuthenticationManager.generate_authorization_url())
+
+
 @app.route('/authentication/refresh')
 def authentication_refresh():
-    try:
-        authentication_mgr.load(TOKENS_FILE)
-    except FileNotFoundError as e:
-        return error('Failed to load tokens from \'{0}\'. Error: {1}'.format(e.filename, e.strerror))
-
     try:
         authentication_mgr.authenticate(do_refresh=True)
     except Exception as e:
         return error(str(e))
 
-    authentication_mgr.dump(TOKENS_FILE)
+    return success()
+
+
+@app.route('/authentication/load')
+def authentication_load_from_disk():
+    try:
+        authentication_mgr.load(TOKENS_FILE)
+    except FileNotFoundError as e:
+        return error('Failed to load tokens from \'{0}\'. Error: {1}'.format(e.filename, e.strerror))
+
+    return success()
+
+
+@app.route('/authentication/store')
+def authentication_store_on_disk():
+    if not authentication_mgr.authenticated:
+        return error('Sorry, no valid authentication for saving was found')
+
+    try:
+        authentication_mgr.dump(TOKENS_FILE)
+    except Exception as e:
+        return error('Failed to save tokens to \'{0}\'. Error: {1}'.format(TOKENS_FILE, str(e)))
+
     return success()
 
 
