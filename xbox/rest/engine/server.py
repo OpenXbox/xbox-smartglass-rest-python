@@ -4,6 +4,7 @@ from functools import wraps
 from xbox.rest.scripts import TOKENS_FILE
 from xbox.webapi.authentication.manager import AuthenticationManager,\
     AuthenticationException, TwoFactorAuthRequired
+from xbox.webapi.api.client import XboxLiveClient
 from xbox.sg import enum
 from xbox.sg.console import Console
 from xbox.sg.manager import InputManager, TextManager, MediaManager
@@ -368,6 +369,24 @@ def console_exists(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+def require_authentication(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        global xbl_client
+
+        if not authentication_mgr.authenticated:
+            return error('Not authenticate for Xbox Live')
+        elif not xbl_client:
+            xbl_client = XboxLiveClient(
+                userhash=authentication_mgr.userinfo.userhash,
+                auth_token=authentication_mgr.xsts_token.jwt,
+                xuid=authentication_mgr.userinfo.xuid
+            )
+
+        kwargs['client'] = xbl_client
+        return f(*args, **kwargs)
+    return decorated_function
 
 """
 Routes
@@ -826,6 +845,20 @@ def nano_stop(console):
 """
 
 
+@app.route('/web/title/<title_id>')
+@require_authentication
+def download_title_info(client, title_id):
+    try:
+        resp = client.titlehub.get_title_info(title_id, 'image').json()
+        return jsonify(resp['titles'][0])
+    except KeyError:
+        return error('Cannot find titles-node json response')
+    except IndexError:
+        return error('No info for requested title not found')
+    except Exception as e:
+        return error('Download of titleinfo failed, error: {0}'.format(e))
+
+
 @app.route('/versions')
 def library_versions():
     import pkg_resources
@@ -862,3 +895,4 @@ def get_smartglass_packetnames():
 
 console_cache = {}
 authentication_mgr = AuthenticationManager()
+xbl_client = None
