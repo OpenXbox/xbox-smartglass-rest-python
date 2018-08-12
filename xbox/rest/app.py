@@ -11,7 +11,48 @@ from xbox.sg.manager import InputManager, TextManager, MediaManager
 from xbox.stump.manager import StumpManager
 
 
-app = Flask(__name__)
+class SmartGlassFlaskApp(Flask):
+    def __init__(self, name):
+        super(SmartGlassFlaskApp, self).__init__(name)
+
+        self.console_cache = {}
+        self.authentication_mgr = AuthenticationManager()
+        self.xbl_client = None
+
+    @property
+    def smartglass_packetnames(self):
+        return [
+            'xbox-smartglass-core',
+            'xbox-smartglass-stump',
+            'xbox-smartglass-nano',
+            'xbox-smartglass-auxiliary',
+            'xbox-smartglass-rest',
+            'xbox-webapi'
+        ]
+
+    def logged_in_gamertag(self):
+        return self.authentication_mgr.userinfo.gamertag if self.authentication_mgr.userinfo else '<UNKNOWN>'
+
+    def reset_authentication(self):
+        self.authentication_mgr = AuthenticationManager()
+
+    def error(self, message, **kwargs):
+        ret = {
+            'success': False,
+            'message': message
+        }
+        if kwargs:
+            ret.update(kwargs)
+        return jsonify(ret), 409
+
+    def success(self, **kwargs):
+        ret = {'success': True}
+        if kwargs:
+            ret.update(kwargs)
+        return jsonify(ret)
+
+
+app = SmartGlassFlaskApp(__name__)
 
 
 class ConsoleWrap(object):
@@ -249,13 +290,13 @@ class ConsoleWrap(object):
             return enum.ConnectionState.Connected
         elif connect_anonymous and not self.anonymous_connection_allowed:
             raise Exception('Requested anonymous connection is not allowed by console')
-        elif not connect_anonymous and (not authentication_mgr.xsts_token or
-                                        not authentication_mgr.userinfo or
-                                        not authentication_mgr.userinfo.userhash):
+        elif not connect_anonymous and (not app.authentication_mgr.xsts_token or
+                                        not app.authentication_mgr.userinfo or
+                                        not app.authentication_mgr.userinfo.userhash):
             raise Exception('Authenticated connection requested but no authentication tokens available')
         elif not connect_anonymous:
-            userhash = authentication_mgr.userinfo.userhash
-            xtoken = authentication_mgr.xsts_token.jwt
+            userhash = app.authentication_mgr.userinfo.userhash
+            xtoken = app.authentication_mgr.xsts_token.jwt
 
         state = self.console.connect(userhash=userhash,
                                      xsts_token=xtoken)
@@ -309,32 +350,6 @@ class ConsoleWrap(object):
     def nano_stop(self):
         self.console.nano.stop_stream()
 
-
-def logged_in_gamertag():
-    return authentication_mgr.userinfo.gamertag if authentication_mgr.userinfo else '<UNKNOWN>'
-
-
-def reset_authentication():
-    global authentication_mgr
-    authentication_mgr = AuthenticationManager()
-
-
-def error(message, **kwargs):
-    ret = {
-        'success': False,
-        'message': message
-    }
-    if kwargs:
-        ret.update(kwargs)
-    return jsonify(ret), 409
-
-
-def success(**kwargs):
-    ret = {'success': True}
-    if kwargs:
-        ret.update(kwargs)
-    return jsonify(ret)
-
 """
 Decorators
 """
@@ -344,11 +359,11 @@ def console_connected(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         liveid = kwargs.get('liveid')
-        console = console_cache.get(liveid)
+        console = app.console_cache.get(liveid)
         if not console:
-            return error('Console {0} is not alive'.format(liveid))
+            return app.error('Console {0} is not alive'.format(liveid))
         elif not console.connected:
-            return error('Console {0} is not connected'.format(liveid))
+            return app.error('Console {0} is not connected'.format(liveid))
 
         del kwargs['liveid']
         kwargs['console'] = console
@@ -360,9 +375,9 @@ def console_exists(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         liveid = kwargs.get('liveid')
-        console = console_cache.get(liveid)
+        console = app.console_cache.get(liveid)
         if not console:
-            return error('Console info for {0} is not available'.format(liveid))
+            return app.error('Console info for {0} is not available'.format(liveid))
 
         del kwargs['liveid']
         kwargs['console'] = console
@@ -373,18 +388,16 @@ def console_exists(f):
 def require_authentication(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        global xbl_client
-
-        if not authentication_mgr.authenticated:
-            return error('Not authenticate for Xbox Live')
-        elif not xbl_client:
-            xbl_client = XboxLiveClient(
-                userhash=authentication_mgr.userinfo.userhash,
-                auth_token=authentication_mgr.xsts_token.jwt,
-                xuid=authentication_mgr.userinfo.xuid
+        if not app.authentication_mgr.authenticated:
+            return app.error('Not authenticate for Xbox Live')
+        elif not app.xbl_client:
+            app.xbl_client = XboxLiveClient(
+                userhash=app.authentication_mgr.userinfo.userhash,
+                auth_token=app.authentication_mgr.xsts_token.jwt,
+                xuid=app.authentication_mgr.userinfo.xuid
             )
 
-        kwargs['client'] = xbl_client
+        kwargs['client'] = app.xbl_client
         return f(*args, **kwargs)
     return decorated_function
 
@@ -396,18 +409,18 @@ Routes
 @app.route('/authentication')
 def authentication_overview():
     tokens = {
-        'access_token': authentication_mgr.access_token,
-        'refresh_token': authentication_mgr.refresh_token,
-        'user_token': authentication_mgr.user_token,
-        'xsts_token': authentication_mgr.xsts_token
+        'access_token': app.authentication_mgr.access_token,
+        'refresh_token': app.authentication_mgr.refresh_token,
+        'user_token': app.authentication_mgr.user_token,
+        'xsts_token': app.authentication_mgr.xsts_token
     }
 
     data = {}
     for k, v in tokens.items():
         data.update({k: v.to_dict() if v else None})
-    userinfo = authentication_mgr.userinfo.to_dict() if authentication_mgr.userinfo else None
+    userinfo = app.authentication_mgr.userinfo.to_dict() if app.authentication_mgr.userinfo else None
 
-    return success(tokens=data, userinfo=userinfo, authenticated=authentication_mgr.authenticated)
+    return app.success(tokens=data, userinfo=userinfo, authenticated=app.authentication_mgr.authenticated)
 
 
 @app.route('/authentication/login', methods=['GET', 'POST'])
@@ -417,16 +430,16 @@ def authentication_login():
         email_address = request.form.get('email')
         password = request.form.get('password')
 
-        if authentication_mgr.authenticated:
-            return error('An account is already signed in.. please logout first')
+        if app.authentication_mgr.authenticated:
+            return app.error('An account is already signed in.. please logout first')
         elif not email_address or not password:
-            return error('No email or password parameter provided')
+            return app.error('No email or password parameter provided')
 
-        authentication_mgr.email_address = email_address
-        authentication_mgr.password = password
+        app.authentication_mgr.email_address = email_address
+        app.authentication_mgr.password = password
 
         try:
-            authentication_mgr.authenticate()
+            app.authentication_mgr.authenticate()
         except AuthenticationException as e:
             if is_webview:
                 return render_template('auth_result.html',
@@ -436,7 +449,7 @@ def authentication_login():
                                        link_path='/authentication/login',
                                        link_title='Try again')
             else:
-                return error('Login failed! Error: {0}'.format(str(e)),
+                return app.error('Login failed! Error: {0}'.format(str(e)),
                              two_factor_required=False)
 
         except TwoFactorAuthRequired:
@@ -448,20 +461,20 @@ def authentication_login():
                                        link_path='/authentication/oauth',
                                        link_title='Login via OAUTH')
             else:
-                return error('Login failed, 2FA required!',
+                return app.error('Login failed, 2FA required!',
                              two_factor_required=True)
 
         if is_webview:
             return render_template('auth_result.html',
                                    title='Login success',
                                    result='Login succeeded',
-                                   message='Welcome {}!'.format(logged_in_gamertag()),
+                                   message='Welcome {}!'.format(app.logged_in_gamertag()),
                                    link_path='/authentication/logout',
                                    link_title='Logout')
         else:
-            return success(message='Login success', gamertag=logged_in_gamertag())
+            return app.success(message='Login success', gamertag=app.logged_in_gamertag())
     elif request.method == 'GET':
-        if authentication_mgr.authenticated:
+        if app.authentication_mgr.authenticated:
             return render_template('auth_result.html',
                                    title='Already signed in',
                                    result='Already signed in',
@@ -476,8 +489,8 @@ def authentication_login():
 def authentication_logout():
     if request.method == 'POST':
         is_webview = request.form.get('webview')
-        username = logged_in_gamertag()
-        reset_authentication()
+        username = app.logged_in_gamertag()
+        app.reset_authentication()
         if is_webview:
             return render_template('auth_result.html',
                                    title='Logout success',
@@ -486,10 +499,10 @@ def authentication_logout():
                                    link_path='/authentication/login',
                                    link_title='Login')
         else:
-            return success(message='Logout succeeded')
+            return app.success(message='Logout succeeded')
     elif request.method == 'GET':
-        if authentication_mgr.authenticated:
-            return render_template('logout.html', username=logged_in_gamertag())
+        if app.authentication_mgr.authenticated:
+            return render_template('logout.html', username=app.logged_in_gamertag())
         else:
             return render_template('auth_result.html',
                                    title='Logout failed',
@@ -501,23 +514,23 @@ def authentication_logout():
 
 @app.route('/authentication/authorization_url')
 def authentication_get_auth_url():
-    return success(authorization_url=AuthenticationManager.generate_authorization_url())
+    return app.success(authorization_url=AuthenticationManager.generate_authorization_url())
 
 
 @app.route('/authentication/oauth', methods=['GET', 'POST'])
 def authentication_oauth():
     if request.method == 'POST':
         is_webview = request.form.get('webview')
-        reset_authentication()
+        app.reset_authentication()
         redirect_uri = request.form.get('redirect_uri')
         if not redirect_uri:
-            return error('Please provide redirect_url')
+            return app.error('Please provide redirect_url')
 
         try:
             access, refresh = AuthenticationManager.parse_redirect_url(redirect_uri)
-            authentication_mgr.access_token = access
-            authentication_mgr.refresh_token = refresh
-            authentication_mgr.authenticate(do_refresh=False)
+            app.authentication_mgr.access_token = access
+            app.authentication_mgr.refresh_token = refresh
+            app.authentication_mgr.authenticate(do_refresh=False)
         except Exception as e:
             if is_webview:
                 return render_template('auth_result.html',
@@ -527,19 +540,19 @@ def authentication_oauth():
                                        link_path='/authentication/login',
                                        link_title='Try again')
             else:
-                return error('Login failed, error: {0}'.format(str(e)))
+                return app.error('Login failed, error: {0}'.format(str(e)))
 
         if is_webview:
             return render_template('auth_result.html',
                                    title='Login success',
                                    result='Login succeeded',
-                                   message='Welcome {}!'.format(logged_in_gamertag()),
+                                   message='Welcome {}!'.format(app.logged_in_gamertag()),
                                    link_path='/authentication/logout',
                                    link_title='Logout')
         else:
-            return success(message='Login success', gamertag=logged_in_gamertag())
+            return app.success(message='Login success', gamertag=app.logged_in_gamertag())
     elif request.method == 'GET':
-        if authentication_mgr.authenticated:
+        if app.authentication_mgr.authenticated:
             return render_template('auth_result.html',
                                    title='Already signed in',
                                    result='Already signed in',
@@ -554,34 +567,34 @@ def authentication_oauth():
 @app.route('/authentication/refresh')
 def authentication_refresh():
     try:
-        authentication_mgr.authenticate(do_refresh=True)
+        app.authentication_mgr.authenticate(do_refresh=True)
     except Exception as e:
-        return error(str(e))
+        return app.error(str(e))
 
-    return success()
+    return app.success()
 
 
 @app.route('/authentication/load')
 def authentication_load_from_disk():
     try:
-        authentication_mgr.load(TOKENS_FILE)
+        app.authentication_mgr.load(TOKENS_FILE)
     except FileNotFoundError as e:
-        return error('Failed to load tokens from \'{0}\'. Error: {1}'.format(e.filename, e.strerror))
+        return app.error('Failed to load tokens from \'{0}\'. Error: {1}'.format(e.filename, e.strerror))
 
-    return success()
+    return app.success()
 
 
 @app.route('/authentication/store')
 def authentication_store_on_disk():
-    if not authentication_mgr.authenticated:
-        return error('Sorry, no valid authentication for saving was found')
+    if not app.authentication_mgr.authenticated:
+        return app.error('Sorry, no valid authentication for saving was found')
 
     try:
-        authentication_mgr.dump(TOKENS_FILE)
+        app.authentication_mgr.dump(TOKENS_FILE)
     except Exception as e:
-        return error('Failed to save tokens to \'{0}\'. Error: {1}'.format(TOKENS_FILE, str(e)))
+        return app.error('Failed to save tokens to \'{0}\'. Error: {1}'.format(TOKENS_FILE, str(e)))
 
-    return success()
+    return app.success()
 
 
 @app.route('/devices')
@@ -589,31 +602,31 @@ def device_overview():
     discovered = ConsoleWrap.discover().copy()
 
     liveids = [d.liveid for d in discovered]
-    for i, c in enumerate(console_cache.values()):
+    for i, c in enumerate(app.console_cache.values()):
         if c.liveid in liveids:
             # Refresh existing entries
             index = liveids.index(c.liveid)
 
             if c.device_status != discovered[index].device_status:
-                console_cache[c.liveid] = ConsoleWrap(discovered[index])
+                app.console_cache[c.liveid] = ConsoleWrap(discovered[index])
             del discovered[index]
             del liveids[index]
         elif c.liveid not in liveids:
             # Set unresponsive consoles to Unavailable
-            console_cache[c.liveid].console.device_status = enum.DeviceStatus.Unavailable
+            app.console_cache[c.liveid].console.device_status = enum.DeviceStatus.Unavailable
 
     # Extend by new entries
     for d in discovered:
-        console_cache.update({d.liveid: ConsoleWrap(d)})
+        app.console_cache.update({d.liveid: ConsoleWrap(d)})
 
-    data = {console.liveid: console.status for console in console_cache.values()}
-    return success(devices=data)
+    data = {console.liveid: console.status for console in app.console_cache.values()}
+    return app.success(devices=data)
 
 
 @app.route('/devices/<liveid>/poweron')
 def poweron(liveid):
     ConsoleWrap.power_on(liveid)
-    return success()
+    return app.success()
 
 
 """
@@ -624,7 +637,7 @@ Require enumerated console
 @app.route('/devices/<liveid>')
 @console_exists
 def device_info(console):
-    return success(device=console.status)
+    return app.success(device=console.status)
 
 
 @app.route('/devices/<liveid>/connect', methods=['GET', 'POST'])
@@ -638,12 +651,12 @@ def force_connect(console):
     try:
         state = console.connect(connect_anonymous=connect_anonymous)
     except Exception as e:
-        return error(str(e))
+        return app.error(str(e))
 
     if state != enum.ConnectionState.Connected:
-        return error('Connection failed', connection_state=state.name)
+        return app.error('Connection failed', connection_state=state.name)
 
-    return success(connection_state=state.name)
+    return app.success(connection_state=state.name)
 
 
 """
@@ -655,35 +668,35 @@ Require connected console
 @console_connected
 def disconnect(console):
     console.disconnect()
-    return success()
+    return app.success()
 
 
 @app.route('/devices/<liveid>/poweroff')
 @console_connected
 def poweroff(console):
     if not console.power_off():
-        return error("Failed to power off")
+        return app.error("Failed to power off")
     else:
-        return success()
+        return app.success()
 
 
 @app.route('/devices/<liveid>/console_status')
 @console_connected
 def console_status(console):
-    return success(console_status=console.console_status)
+    return app.success(console_status=console.console_status)
 
 
 @app.route('/devices/<liveid>/launch/<app_id>')
 @console_connected
 def launch_title(console, app_id):
     console.launch_title(app_id)
-    return success(launched=app_id)
+    return app.success(launched=app_id)
 
 
 @app.route('/devices/<liveid>/media_status')
 @console_connected
 def media_status(console):
-    return success(media_status=console.media_status)
+    return app.success(media_status=console.media_status)
 
 
 @app.route('/devices/<liveid>/ir')
@@ -709,7 +722,7 @@ def infrared(console):
             'buttons': button_links
         }
 
-    return success(**devices)
+    return app.success(**devices)
 
 
 @app.route('/devices/<liveid>/ir/<device_id>')
@@ -727,7 +740,7 @@ def infrared_available_keys(console, device_id):
                 'value': device_config.buttons[button]
             }
 
-        return success(
+        return app.success(
             device_type=device_config.device_type,
             device_brand=device_config.device_brand,
             device_model=device_config.device_model,
@@ -736,23 +749,23 @@ def infrared_available_keys(console, device_id):
             buttons=button_links
         )
 
-    return error('Device Id \'{0}\' not found'.format(device_id))
+    return app.error('Device Id \'{0}\' not found'.format(device_id))
 
 
 @app.route('/devices/<liveid>/ir/<device_id>/<button>')
 @console_connected
 def infrared_send(console, device_id, button):
     if not console.send_stump_key(device_id, button):
-        return error('Failed to send button')
+        return app.error('Failed to send button')
 
-    return success(sent_key=button, device_id=device_id)
+    return app.success(sent_key=button, device_id=device_id)
 
 
 @app.route('/devices/<liveid>/media')
 @console_connected
 def media_overview(console):
     commands = [cmd.name for cmd in enum.MediaControlCommand]
-    return success(commands=commands)
+    return app.success(commands=commands)
 
 
 @app.route('/devices/<liveid>/media/<command>')
@@ -761,24 +774,24 @@ def media_command(console, command):
     try:
         cmd = enum.MediaControlCommand[command]
     except Exception as e:
-        return error('Invalid command passed, msg: {0}'.format(e))
+        return app.error('Invalid command passed, msg: {0}'.format(e))
 
     console.send_media_command(cmd)
-    return success()
+    return app.success()
 
 
 @app.route('/devices/<liveid>/media/Seek/<seek_position>')
 @console_connected
 def media_command_seek(console, seek_pos):
     console.send_media_command(enum.MediaControlCommand.Seek, int(seek_pos))
-    return success()
+    return app.success()
 
 
 @app.route('/devices/<liveid>/input')
 @console_connected
 def input_overview(console):
     buttons = [btn.name for btn in enum.GamePadButton]
-    return success(buttons=buttons)
+    return app.success(buttons=buttons)
 
 
 @app.route('/devices/<liveid>/input/<button>')
@@ -787,61 +800,61 @@ def input_send_button(console, button):
     try:
         btn = enum.GamePadButton[button]
     except Exception as e:
-        return error('Invalid button passed, msg: {0}'.format(e))
+        return app.error('Invalid button passed, msg: {0}'.format(e))
 
     console.send_gamepad_button(btn)
-    return success()
+    return app.success()
 
 
 @app.route('/devices/<liveid>/stump/headend')
 @console_connected
 def stump_headend_info(console):
-    return success(headend_info=console.headend_info.params.dump())
+    return app.success(headend_info=console.headend_info.params.dump())
 
 
 @app.route('/devices/<liveid>/stump/livetv')
 @console_connected
 def stump_livetv_info(console):
-    return success(livetv_info=console.livetv_info.params.dump())
+    return app.success(livetv_info=console.livetv_info.params.dump())
 
 
 @app.route('/devices/<liveid>/stump/tuner_lineups')
 @console_connected
 def stump_tuner_lineups(console):
-    return success(tuner_lineups=console.tuner_lineups.params.dump())
+    return app.success(tuner_lineups=console.tuner_lineups.params.dump())
 
 
 @app.route('/devices/<liveid>/text')
 @console_connected
 def text_overview(console):
-    return success(text_session_active=console.text_active)
+    return app.success(text_session_active=console.text_active)
 
 
 @app.route('/devices/<liveid>/text/<text>')
 @console_connected
 def text_send(console, text):
     console.send_text(text)
-    return success()
+    return app.success()
 
 """
 @app.route('/devices/<liveid>/nano')
 @console_connected
 def nano_overview(console):
-    return success(nano_status=console.nano_status)
+    return app.success(nano_status=console.nano_status)
 
 
 @app.route('/devices/<liveid>/nano/start')
 @console_connected
 def nano_start(console):
     console.nano_start()
-    return success()
+    return app.success()
 
 
 @app.route('/devices/<liveid>/nano/stop')
 @console_connected
 def nano_stop(console):
     console.nano_stop()
-    return success()
+    return app.success()
 """
 
 
@@ -852,11 +865,11 @@ def download_title_info(client, title_id):
         resp = client.titlehub.get_title_info(title_id, 'image').json()
         return jsonify(resp['titles'][0])
     except KeyError:
-        return error('Cannot find titles-node json response')
+        return app.error('Cannot find titles-node json response')
     except IndexError:
-        return error('No info for requested title not found')
+        return app.error('No info for requested title not found')
     except Exception as e:
-        return error('Download of titleinfo failed, error: {0}'.format(e))
+        return app.error('Download of titleinfo failed, error: {0}'.format(e))
 
 
 @app.route('/versions')
@@ -864,35 +877,19 @@ def library_versions():
     import pkg_resources
 
     versions = {}
-    for name in get_smartglass_packetnames():
+    for name in app.smartglass_packetnames:
         try:
             versions[name] = pkg_resources.get_distribution(name).version
         except:
             versions[name] = None
 
-    return success(versions=versions)
+    return app.success(versions=versions)
 
 
 @app.route('/')
 def webroot():
-
     routes = []
     for rule in app.url_map.iter_rules():
         routes.append('%s' % rule)
 
-    return success(endpoints=sorted(routes))
-
-
-def get_smartglass_packetnames():
-    return [
-        'xbox-smartglass-core',
-        'xbox-smartglass-stump',
-        'xbox-smartglass-nano',
-        'xbox-smartglass-auxiliary',
-        'xbox-smartglass-rest',
-        'xbox-webapi'
-    ]
-
-console_cache = {}
-authentication_mgr = AuthenticationManager()
-xbl_client = None
+    return app.success(endpoints=sorted(routes))
