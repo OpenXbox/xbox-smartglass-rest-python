@@ -39,6 +39,7 @@ def authentication_login():
 
         try:
             app.authentication_mgr.authenticate()
+            app.authentication_mgr.dump(TOKENS_FILE)
         except AuthenticationException as e:
             if is_webview:
                 return render_template('auth_result.html',
@@ -130,6 +131,7 @@ def authentication_oauth():
             app.authentication_mgr.access_token = access
             app.authentication_mgr.refresh_token = refresh
             app.authentication_mgr.authenticate(do_refresh=False)
+            app.authentication_mgr.dump(TOKENS_FILE)
         except Exception as e:
             if is_webview:
                 return render_template('auth_result.html',
