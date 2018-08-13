@@ -2,8 +2,8 @@ from flask import Flask, jsonify, request, render_template, redirect
 from http import HTTPStatus
 from xbox.webapi.authentication.manager import AuthenticationManager
 from xbox.webapi.api.client import XboxLiveClient
-from xbox.rest.scripts import TOKENS_FILE
 from .routes import routes
+
 
 class SmartGlassFlaskApp(Flask):
     def __init__(self, name):
@@ -11,14 +11,8 @@ class SmartGlassFlaskApp(Flask):
 
         self.console_cache = {}
         self.authentication_mgr = AuthenticationManager()
+        self.token_file = None
         self._xbl_client = None
-
-        try:
-            # Best effort token load & refresh
-            self.authentication_mgr.load(TOKENS_FILE)
-            self.authentication_mgr.authenticate(do_refresh=True)
-        except:
-            pass
 
     @property
     def smartglass_packetnames(self):
@@ -41,6 +35,7 @@ class SmartGlassFlaskApp(Flask):
             )
         return self._xbl_client
 
+    @property
     def logged_in_gamertag(self):
         return self.authentication_mgr.userinfo.gamertag if self.authentication_mgr.userinfo else '<UNKNOWN>'
 
@@ -54,6 +49,7 @@ class SmartGlassFlaskApp(Flask):
         }
         if kwargs:
             ret.update(kwargs)
+        self.logger.error(str(ret))
         return jsonify(ret), code
 
     def success(self, **kwargs):

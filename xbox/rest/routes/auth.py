@@ -81,17 +81,17 @@ def authentication_login_post():
         return render_template('auth_result.html',
                                 title='Login success',
                                 result='Login succeeded',
-                                message='Welcome {}!'.format(app.logged_in_gamertag()),
+                                message='Welcome {}!'.format(app.logged_in_gamertag),
                                 link_path='/auth/logout',
                                 link_title='Logout')
     else:
-        return app.success(message='Login success', gamertag=app.logged_in_gamertag())
+        return app.success(message='Login success', gamertag=app.logged_in_gamertag)
 
 
 @routes.route('/auth/logout')
 def authentication_logout():
     if app.authentication_mgr.authenticated:
-        return render_template('logout.html', username=app.logged_in_gamertag())
+        return render_template('logout.html', username=app.logged_in_gamertag)
     else:
         return render_template('auth_result.html',
                                 title='Logout failed',
@@ -103,7 +103,7 @@ def authentication_logout():
 @routes.route('/auth/logout', methods=['POST'])
 def authentication_logout_post():
     is_webview = request.form.get('webview')
-    username = app.logged_in_gamertag()
+    username = app.logged_in_gamertag
     app.reset_authentication()
     if is_webview:
         return render_template('auth_result.html',
@@ -163,11 +163,11 @@ def authentication_oauth_post():
         return render_template('auth_result.html',
                                 title='Login success',
                                 result='Login succeeded',
-                                message='Welcome {}!'.format(app.logged_in_gamertag()),
+                                message='Welcome {}!'.format(app.logged_in_gamertag),
                                 link_path='/auth/logout',
                                 link_title='Logout')
     else:
-        return app.success(message='Login success', gamertag=app.logged_in_gamertag())
+        return app.success(message='Login success', gamertag=app.logged_in_gamertag)
 
 
 @routes.route('/auth/refresh')
@@ -183,7 +183,7 @@ def authentication_refresh():
 @routes.route('/auth/load')
 def authentication_load_from_disk():
     try:
-        app.authentication_mgr.load(TOKENS_FILE)
+        app.authentication_mgr.load(app)
     except FileNotFoundError as e:
         return app.error('Failed to load tokens from \'{0}\'. Error: {1}'.format(e.filename, e.strerror), HTTPStatus.NOT_FOUND)
 
