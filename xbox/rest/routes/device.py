@@ -107,7 +107,7 @@ def console_status(console):
     return app.success(console_status=status)
 
 
-@routes.route('/device/<liveid>/launch/<app_id>')
+@routes.route('/device/<liveid>/launch/<path:app_id>')
 @console_connected
 def launch_title(console, app_id):
     console.launch_title(app_id)
@@ -199,10 +199,10 @@ def media_command(console, command):
     return app.success()
 
 
-@routes.route('/device/<liveid>/media/seek/<seek_position>')
+@routes.route('/device/<liveid>/media/seek/<int:seek_position>')
 @console_connected
-def media_command_seek(console, seek_pos):
-    console.send_media_command(enum.MediaControlCommand.Seek, int(seek_pos))
+def media_command_seek(console, seek_position):
+    console.send_media_command(enum.MediaControlCommand.Seek, seek_position)
     return app.success()
 
 
