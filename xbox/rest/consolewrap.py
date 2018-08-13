@@ -23,6 +23,48 @@ class ConsoleWrap(object):
             Console.wait(1)
 
     @property
+    def media_commands(self):
+        return {
+            'play': enum.MediaControlCommand.Play,
+            'pause': enum.MediaControlCommand.Pause,
+            'play_pause': enum.MediaControlCommand.PlayPauseToggle,
+            'stop': enum.MediaControlCommand.Stop,
+            'record': enum.MediaControlCommand.Record,
+            'next_track': enum.MediaControlCommand.NextTrack,
+            'prev_track': enum.MediaControlCommand.PreviousTrack,
+            'fast_forward': enum.MediaControlCommand.FastForward,
+            'rewind': enum.MediaControlCommand.Rewind,
+            'channel_up': enum.MediaControlCommand.ChannelUp,
+            'channel_down': enum.MediaControlCommand.ChannelDown,
+            'back': enum.MediaControlCommand.Back,
+            'view': enum.MediaControlCommand.View,
+            'menu': enum.MediaControlCommand.Menu,
+            'seek': enum.MediaControlCommand.Seek
+        }
+
+    @property
+    def input_keys(self):
+        return {
+            'clear': enum.GamePadButton.Clear,
+            'enroll': enum.GamePadButton.Enroll,
+            'nexus': enum.GamePadButton.Nexu,
+            'menu': enum.GamePadButton.Menu,
+            'view': enum.GamePadButton.View,
+            'a': enum.GamePadButton.PadA,
+            'b': enum.GamePadButton.PadB,
+            'x': enum.GamePadButton.PadX,
+            'y': enum.GamePadButton.PadY,
+            'dpad_up': enum.GamePadButton.DPadUp,
+            'dpad_down': enum.GamePadButton.DPadDown,
+            'dpad_left': enum.GamePadButton.DPadLeft,
+            'dpad_right': enum.GamePadButton.DPadRight,
+            'left_shoulder': enum.GamePadButton.LeftShoulder,
+            'right_shoulder': enum.GamePadButton.RightShoulder,
+            'left_thumbstick': enum.GamePadButton.LeftThumbStick,
+            'right_thumbstick': enum.GamePadButton.RightThumbStick
+        }
+
+    @property
     def liveid(self):
         return self.console.liveid
 

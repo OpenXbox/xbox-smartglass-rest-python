@@ -185,17 +185,15 @@ def infrared_send(console, device_id, button):
 @routes.route('/device/<liveid>/media')
 @console_connected
 def media_overview(console):
-    commands = [cmd.name for cmd in enum.MediaControlCommand]
-    return app.success(commands=commands)
+    return app.success(commands=list(console.media_commands.keys()))
 
 
 @routes.route('/device/<liveid>/media/<command>')
 @console_connected
 def media_command(console, command):
-    try:
-        cmd = enum.MediaControlCommand[command]
-    except Exception as e:
-        return app.error('Invalid command passed, msg: {0}'.format(e), HTTPStatus.BAD_REQUEST)
+    cmd = console.media_commands.get(command)
+    if not cmd:
+        return app.error('Invalid command passed, command: {0}'.format(command), HTTPStatus.BAD_REQUEST)
 
     console.send_media_command(cmd)
     return app.success()
@@ -211,17 +209,15 @@ def media_command_seek(console, seek_pos):
 @routes.route('/device/<liveid>/input')
 @console_connected
 def input_overview(console):
-    buttons = [btn.name for btn in enum.GamePadButton]
-    return app.success(buttons=buttons)
+    return app.success(buttons=list(console.input_keys.keys()))
 
 
 @routes.route('/device/<liveid>/input/<button>')
 @console_connected
 def input_send_button(console, button):
-    try:
-        btn = enum.GamePadButton[button]
-    except Exception as e:
-        return app.error('Invalid button passed, msg: {0}'.format(e), HTTPStatus.BAD_REQUEST)
+    btn = console.input_keys.get(button)
+    if not btn:
+        return app.error('Invalid button passed, button: {0}'.format(button), HTTPStatus.BAD_REQUEST)
 
     console.send_gamepad_button(btn)
     return app.success()
