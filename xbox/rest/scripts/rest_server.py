@@ -3,7 +3,7 @@ monkey.patch_all()
 from gevent import wsgi
 
 import argparse
-from xbox.rest.engine.server import app
+from xbox.rest.app import app
 
 def main():
     parser = argparse.ArgumentParser(description="Xbox One SmartGlass REST server")

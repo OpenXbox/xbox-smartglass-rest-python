@@ -9,6 +9,7 @@ History
 * Add console flags
 * Preparing NANO endpoints
 * Adjusting authentication endpoint slightly
+* Allow anonymous connection
 
 0.9.1 (2018-08-04)
 ------------------
