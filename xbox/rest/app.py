@@ -80,21 +80,15 @@ class ConsoleWrap(object):
 
     @property
     def available(self):
-        if not self.console:
-            return False
-
-        return self.console.available
+        return bool(self.console and self.console.available)
 
     @property
     def connected(self):
-        if not self.console:
-            return False
-
-        return self.console.connected
+        return bool(self.console and self.console.connected)
 
     @property
     def usable(self):
-        return self.console and self.connected
+        return bool(self.console and self.connected)
 
     @property
     def connection_state(self):
@@ -119,31 +113,19 @@ class ConsoleWrap(object):
 
     @property
     def authenticated_users_allowed(self):
-        if not self.console:
-            return None
-
-        return self.console.authenticated_users_allowed
+        return bool(self.console and self.console.authenticated_users_allowed)
 
     @property
     def console_users_allowed(self):
-        if not self.console:
-            return None
-
-        return self.console.console_users_allowed
+        return bool(self.console and self.console.console_users_allowed)
 
     @property
     def anonymous_connection_allowed(self):
-        if not self.console:
-            return None
-
-        return self.console.anonymous_connection_allowed
+        return bool(self.console and self.console.anonymous_connection_allowed)
 
     @property
     def is_certificate_pending(self):
-        if not self.console:
-            return None
-
-        return self.console.is_certificate_pending
+        return bool(self.console and self.console.is_certificate_pending)
 
     @property
     def console_status(self):
@@ -224,38 +206,28 @@ class ConsoleWrap(object):
 
     @property
     def stump_config(self):
-        if not self.usable:
-            return None
-
-        return self.console.stump.request_stump_configuration()
+        if self.usable:
+            return self.console.stump.request_stump_configuration()
 
     @property
     def headend_info(self):
-        if not self.usable:
-            return None
-
-        return self.console.stump.request_headend_info()
+        if self.usable:
+            return self.console.stump.request_headend_info()
 
     @property
     def livetv_info(self):
-        if not self.usable:
-            return None
-
-        return self.console.stump.request_live_tv_info()
+        if self.usable:
+            return self.console.stump.request_live_tv_info()
 
     @property
     def tuner_lineups(self):
-        if not self.usable:
-            return None
-
-        return self.console.stump.request_tuner_lineups()
+        if self.usable:
+            return self.console.stump.request_tuner_lineups()
 
     @property
     def text_active(self):
-        if not self.usable:
-            return None
-
-        return self.console.text.got_active_session
+        if self.usable:
+            return self.console.text.got_active_session
 
     @property
     def nano_status(self):
@@ -346,9 +318,11 @@ class ConsoleWrap(object):
 
     def nano_start(self):
         self.console.nano.start_stream()
+        return True
 
     def nano_stop(self):
         self.console.nano.stop_stream()
+        return True
 
 """
 Decorators
@@ -450,7 +424,7 @@ def authentication_login():
                                        link_title='Try again')
             else:
                 return app.error('Login failed! Error: {0}'.format(str(e)),
-                             two_factor_required=False)
+                                 two_factor_required=False)
 
         except TwoFactorAuthRequired:
             if is_webview:
@@ -462,7 +436,7 @@ def authentication_login():
                                        link_title='Login via OAUTH')
             else:
                 return app.error('Login failed, 2FA required!',
-                             two_factor_required=True)
+                                 two_factor_required=True)
 
         if is_webview:
             return render_template('auth_result.html',
