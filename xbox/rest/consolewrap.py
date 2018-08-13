@@ -7,10 +7,14 @@ class ConsoleWrap(object):
     def __init__(self, console):
         self.console = console
 
-        self.console.add_manager(InputManager)
-        self.console.add_manager(TextManager)
-        self.console.add_manager(MediaManager)
-        self.console.add_manager(StumpManager)
+        if 'input' not in self.console.managers:
+            self.console.add_manager(InputManager)
+        if 'input' not in self.console.managers:
+            self.console.add_manager(TextManager)
+        if 'input' not in self.console.managers:
+            self.console.add_manager(MediaManager)
+        if 'input' not in self.console.managers:
+            self.console.add_manager(StumpManager)
 
     @staticmethod
     def discover():

@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 
 def test_auth_overview(client):
-    resp = client.get('/auth')
+    resp = client.test_client().get('/auth')
     json = resp.json
 
     assert resp.status_code == HTTPStatus.OK
@@ -22,7 +22,7 @@ def test_auth_overview(client):
 
 
 def test_auth_login_get(client):
-    resp = client.get('/auth/login')
+    resp = client.test_client().get('/auth/login')
 
     assert resp.status_code == HTTPStatus.OK
     assert resp.json is None
@@ -31,7 +31,7 @@ def test_auth_login_get(client):
 
 def test_auth_login_post_no_params(client):
     # No post params
-    resp = client.post('/auth/login')
+    resp = client.test_client().post('/auth/login')
 
     assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert resp.json['success'] is False
@@ -39,7 +39,7 @@ def test_auth_login_post_no_params(client):
 
 
 def test_auth_login_post_invalid_credentials(client):
-    resp = client.post('/auth/login',
+    resp = client.test_client().post('/auth/login',
                        data={'email': 'foo@bar.com', 'password': '123'})
 
     assert resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
@@ -49,7 +49,7 @@ def test_auth_login_post_invalid_credentials(client):
 
 
 def test_auth_login_post_webview_invalid_credentials(client):
-    resp = client.post('/auth/login',
+    resp = client.test_client().post('/auth/login',
                        data={'webview': True,
                              'email': 'foo@bar.com', 'password': '123'})
 
@@ -59,7 +59,7 @@ def test_auth_login_post_webview_invalid_credentials(client):
 
 
 def test_auth_logout_get_not_logged_in(client):
-    resp = client.get('/auth/logout')
+    resp = client.test_client().get('/auth/logout')
 
     assert resp.status_code == HTTPStatus.OK
     assert resp.json is None
@@ -67,7 +67,7 @@ def test_auth_logout_get_not_logged_in(client):
 
 
 def test_auth_logout_post(client):
-    resp = client.post('/auth/logout')
+    resp = client.test_client().post('/auth/logout')
 
     assert resp.status_code == HTTPStatus.OK
     assert resp.json['success'] is True
@@ -75,7 +75,7 @@ def test_auth_logout_post(client):
 
 
 def test_auth_logout_post_webview(client):
-    resp = client.post('/auth/logout', data={'webview': True})
+    resp = client.test_client().post('/auth/logout', data={'webview': True})
 
     assert resp.status_code == HTTPStatus.OK
     assert resp.json is None
@@ -83,7 +83,7 @@ def test_auth_logout_post_webview(client):
 
 
 def test_auth_url(client):
-    resp = client.get('/auth/url')
+    resp = client.test_client().get('/auth/url')
 
     assert resp.status_code == HTTPStatus.OK
     assert resp.json['success'] is True
@@ -92,7 +92,7 @@ def test_auth_url(client):
 
 
 def test_auth_oauth_get(client):
-    resp = client.get('/auth/oauth')
+    resp = client.test_client().get('/auth/oauth')
 
     assert resp.status_code == HTTPStatus.OK
     assert resp.json is None
@@ -100,7 +100,7 @@ def test_auth_oauth_get(client):
 
 
 def test_auth_oauth_post_no_params(client):
-    resp = client.post('/auth/oauth')
+    resp = client.test_client().post('/auth/oauth')
 
     assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert resp.json['success'] is False
@@ -108,7 +108,7 @@ def test_auth_oauth_post_no_params(client):
 
 
 def test_auth_oauth_post_no_params_webview(client):
-    resp = client.post('/auth/oauth', data={'webview': True})
+    resp = client.test_client().post('/auth/oauth', data={'webview': True})
 
     assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert resp.json['success'] is False
@@ -116,7 +116,7 @@ def test_auth_oauth_post_no_params_webview(client):
 
 
 def test_auth_oauth_post_invalid_params(client):
-    resp = client.post('/auth/oauth', data={'redirect_uri': 'hxxxp:/invalid'})
+    resp = client.test_client().post('/auth/oauth', data={'redirect_uri': 'hxxxp:/invalid'})
 
     assert resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
     assert resp.json['success'] is False
@@ -124,8 +124,8 @@ def test_auth_oauth_post_invalid_params(client):
 
 
 def test_auth_oauth_post_invalid_params_webview(client):
-    resp = client.post('/auth/oauth', data={'webview': True,
-                                            'redirect_uri': 'hxxxp:/invalid'})
+    resp = client.test_client().post('/auth/oauth', data={'webview': True,
+                                  'redirect_uri': 'hxxxp:/invalid'})
 
     assert resp.status_code == HTTPStatus.OK
     assert b'Login failed' in resp.data
