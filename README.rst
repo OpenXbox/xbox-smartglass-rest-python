@@ -47,33 +47,33 @@ Authentication
 Authenticate from scratch
 ::
 
-    For non-2FA enabled account: http://localhost:5557/authentication/login
-    For 2FA: http://localhost:5557/authentication/oauth
+    For non-2FA enabled account: http://localhost:5557/auth/login
+    For 2FA: http://localhost:5557/auth/oauth
 
     # Store tokens on valid authentication
-    http://localhost:5557/authentication/store
+    http://localhost:5557/auth/store
 
 Load tokens from disk
 ::
 
-    http://localhost:5557/authentication/load
-    http://localhost:5557/authentication/refresh
+    http://localhost:5557/auth/load
+    http://localhost:5557/auth/refresh
 
 2FA OAuth - POST
 ::
 
     # Get authorize url
-    GET http://localhost:5557/authentication/authorization_url
+    GET http://localhost:5557/auth/authorization_url
     Response-Parameters (JSON): authorization_url
 
     # Submit redirect url
-    POST http://localhost:5557/authentication/oauth
+    POST http://localhost:5557/auth/oauth
     Request-Parameters: redirect_uri
 
 Regular (non-2FA) login - POST
 ::
 
-    POST http://localhost:5557/authentication/login
+    POST http://localhost:5557/auth/login
     Request-Parameters: email, password
 
 
@@ -90,13 +90,13 @@ Usual usage:
 ::
 
     # (Optional) Poweron console
-    http://localhost:5557/devices/<liveid>/poweron
+    http://localhost:5557/device/<liveid>/poweron
     # Enumerate devices on network
-    http://localhost:5557/devices
+    http://localhost:5557/device
     # Connect to console
     # NOTE: You can POST to /connect with parameter: connect_anonymous=true
     # .. if console allows it ..
-    http://localhost:5557/devices/<liveid>/connect
+    http://localhost:5557/device/<liveid>/connect
 
     # Use other API endpoints ...
 
