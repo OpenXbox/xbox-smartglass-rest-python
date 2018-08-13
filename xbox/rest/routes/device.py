@@ -95,7 +95,7 @@ def console_status(console):
     status = console.console_status
     client = app.xbl_client
     # Update Title Info
-    if client:
+    if client and status:
         for t in status['active_titles']:
             try:
                 resp = client.titlehub.get_title_info(t['title_id'], 'image').json()
