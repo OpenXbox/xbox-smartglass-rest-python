@@ -1,7 +1,6 @@
 from flask import current_app as app
 from flask import request, render_template
 from http import HTTPStatus
-from xbox.rest.scripts import TOKENS_FILE
 from xbox.webapi.authentication.manager import AuthenticationManager,\
     AuthenticationException, TwoFactorAuthRequired
 from . import routes
@@ -52,7 +51,7 @@ def authentication_login_post():
 
     try:
         app.authentication_mgr.authenticate()
-        app.authentication_mgr.dump(TOKENS_FILE)
+        app.authentication_mgr.dump(app.token_file)
     except AuthenticationException as e:
         if is_webview:
             return render_template('auth_result.html',
@@ -147,7 +146,7 @@ def authentication_oauth_post():
         app.authentication_mgr.access_token = access
         app.authentication_mgr.refresh_token = refresh
         app.authentication_mgr.authenticate(do_refresh=False)
-        app.authentication_mgr.dump(TOKENS_FILE)
+        app.authentication_mgr.dump(app.token_file)
     except Exception as e:
         if is_webview:
             return render_template('auth_result.html',
@@ -183,7 +182,7 @@ def authentication_refresh():
 @routes.route('/auth/load')
 def authentication_load_from_disk():
     try:
-        app.authentication_mgr.load(app)
+        app.authentication_mgr.load(app.token_file)
     except FileNotFoundError as e:
         return app.error('Failed to load tokens from \'{0}\'. Error: {1}'.format(e.filename, e.strerror), HTTPStatus.NOT_FOUND)
 
@@ -196,8 +195,8 @@ def authentication_store_on_disk():
         return app.error('Sorry, no valid authentication for saving was found', HTTPStatus.BAD_REQUEST)
 
     try:
-        app.authentication_mgr.dump(TOKENS_FILE)
+        app.authentication_mgr.dump(app.token_file)
     except Exception as e:
-        return app.error('Failed to save tokens to \'{0}\'. Error: {1}'.format(TOKENS_FILE, str(e)))
+        return app.error('Failed to save tokens to \'{0}\'. Error: {1}'.format(app.token_file, str(e)))
 
     return app.success()
