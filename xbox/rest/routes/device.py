@@ -48,16 +48,16 @@ def device_info(console):
     return app.success(device=console.status)
 
 
-@routes.route('/device/<liveid>/connect', methods=['GET', 'POST'])
+@routes.route('/device/<liveid>/connect')
 @console_exists
 def force_connect(console):
-    connect_anonymous = False
-
-    if request.method == 'POST':
-        connect_anonymous = True if request.form.get('connect_anonymous') else False
-
     try:
-        state = console.connect(connect_anonymous=connect_anonymous)
+        userhash = ''
+        xtoken = ''
+        if app.authentication_mgr.authenticated:
+            userhash = app.authentication_mgr.userinfo.userhash
+            xtoken = app.authentication_mgr.xsts_token.jwt
+        state = console.connect(userhash, xtoken)
     except Exception as e:
         return app.error(str(e))
 
@@ -91,7 +91,19 @@ def poweroff(console):
 @routes.route('/device/<liveid>/console_status')
 @console_connected
 def console_status(console):
-    return app.success(console_status=console.console_status)
+    status = console.console_status
+    client = app.xbl_client
+    # Update Title Info
+    if client:
+        for t in status['active_titles']:
+            try:
+                resp = client.titlehub.get_title_info(t['title_id'], 'image').json()
+                if resp['titles'][0]:
+                    t['name'] = resp['titles'][0]['name']
+                    t['image'] = resp['titles'][0]['displayImage']
+            except:
+                pass
+    return app.success(console_status=status)
 
 
 @routes.route('/device/<liveid>/launch/<app_id>')
@@ -188,7 +200,7 @@ def media_command(console, command):
     return app.success()
 
 
-@routes.route('/device/<liveid>/media/Seek/<seek_position>')
+@routes.route('/device/<liveid>/media/seek/<seek_position>')
 @console_connected
 def media_command_seek(console, seek_pos):
     console.send_media_command(enum.MediaControlCommand.Seek, int(seek_pos))

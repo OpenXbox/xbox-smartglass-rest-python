@@ -96,6 +96,8 @@ class ConsoleWrap(object):
             title = {
                 'title_id': at.title_id,
                 'aum': at.aum,
+                'name': at.aum,
+                'image': None,
                 'has_focus': at.disposition.has_focus,
                 'title_location': at.disposition.title_location.name,
                 'product_id': str(at.product_id),
@@ -200,7 +202,7 @@ class ConsoleWrap(object):
         }
         return data
 
-    def connect(self, userhash = '', xtoken = ''):
+    def connect(self, userhash=None, xtoken=None):
         if not self.console:
             return enum.ConnectionState.Disconnected
         elif self.console.connected:
