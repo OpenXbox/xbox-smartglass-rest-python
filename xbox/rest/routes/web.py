@@ -15,3 +15,12 @@ def download_title_info(client, title_id):
         return app.error('No info for requested title not found')
     except Exception as e:
         return app.error('Download of titleinfo failed, error: {0}'.format(e))
+
+@routes.route('/web/titlehistory')
+@require_authentication
+def download_title_history(client):
+    try:
+        resp = client.titlehub.get_title_history(app.xbl_client.xuid).json()
+        return jsonify(resp)
+    except Exception as e:
+        return app.error('Download of titlehistory failed, error: {0}'.format(e))
