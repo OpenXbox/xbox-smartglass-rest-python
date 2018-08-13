@@ -1,5 +1,6 @@
 from flask import current_app as app
 from flask import request
+from http import HTTPStatus
 from xbox.sg import enum
 from ..decorators import console_exists, console_connected
 from ..consolewrap import ConsoleWrap
@@ -169,7 +170,7 @@ def infrared_available_keys(console, device_id):
             buttons=button_links
         )
 
-    return app.error('Device Id \'{0}\' not found'.format(device_id))
+    return app.error('Device Id \'{0}\' not found'.format(device_id), HTTPStatus.BAD_REQUEST)
 
 
 @routes.route('/device/<liveid>/ir/<device_id>/<button>')
@@ -194,7 +195,7 @@ def media_command(console, command):
     try:
         cmd = enum.MediaControlCommand[command]
     except Exception as e:
-        return app.error('Invalid command passed, msg: {0}'.format(e))
+        return app.error('Invalid command passed, msg: {0}'.format(e), HTTPStatus.BAD_REQUEST)
 
     console.send_media_command(cmd)
     return app.success()
@@ -220,7 +221,7 @@ def input_send_button(console, button):
     try:
         btn = enum.GamePadButton[button]
     except Exception as e:
-        return app.error('Invalid button passed, msg: {0}'.format(e))
+        return app.error('Invalid button passed, msg: {0}'.format(e), HTTPStatus.BAD_REQUEST)
 
     console.send_gamepad_button(btn)
     return app.success()

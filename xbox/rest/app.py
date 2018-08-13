@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, render_template, redirect
-
+from http import HTTPStatus
 from xbox.webapi.authentication.manager import AuthenticationManager
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.rest.scripts import TOKENS_FILE
@@ -47,14 +47,14 @@ class SmartGlassFlaskApp(Flask):
     def reset_authentication(self):
         self.authentication_mgr = AuthenticationManager()
 
-    def error(self, message, **kwargs):
+    def error(self, message, code=HTTPStatus.INTERNAL_SERVER_ERROR, **kwargs):
         ret = {
             'success': False,
             'message': message
         }
         if kwargs:
             ret.update(kwargs)
-        return jsonify(ret), 409
+        return jsonify(ret), code
 
     def success(self, **kwargs):
         ret = {'success': True}
