@@ -63,7 +63,7 @@ Load tokens from disk
 ::
 
     # Get authorize url
-    GET http://localhost:5557/auth/authorization_url
+    GET http://localhost:5557/auth/url
     Response-Parameters (JSON): authorization_url
 
     # Submit redirect url

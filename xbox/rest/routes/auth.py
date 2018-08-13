@@ -111,7 +111,7 @@ def authentication_logout():
                                    link_title='Login')
 
 
-@routes.route('/auth/authorization_url')
+@routes.route('/auth/url')
 def authentication_get_auth_url():
     return app.success(authorization_url=AuthenticationManager.generate_authorization_url())
 
