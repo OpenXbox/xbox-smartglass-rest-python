@@ -61,6 +61,9 @@ target/
 # Intellij
 .idea/
 
+# VS Code
+.vscode/
+
 # Node
 node_modules
 
