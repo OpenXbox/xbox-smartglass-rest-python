@@ -9,11 +9,11 @@ class ConsoleWrap(object):
 
         if 'input' not in self.console.managers:
             self.console.add_manager(InputManager)
-        if 'input' not in self.console.managers:
+        if 'text' not in self.console.managers:
             self.console.add_manager(TextManager)
-        if 'input' not in self.console.managers:
+        if 'media' not in self.console.managers:
             self.console.add_manager(MediaManager)
-        if 'input' not in self.console.managers:
+        if 'stump' not in self.console.managers:
             self.console.add_manager(StumpManager)
 
     @staticmethod
@@ -156,7 +156,7 @@ class ConsoleWrap(object):
 
     @property
     def media_status(self):
-        if not self.usable or not self.console.media.media_state:
+        if not self.usable or not self.console.media or not self.console.media.media_state:
             return None
 
         media_state = self.console.media.media_state
