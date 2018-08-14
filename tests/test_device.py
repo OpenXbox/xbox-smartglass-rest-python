@@ -1,37 +1,127 @@
 from http import HTTPStatus
 
-from xbox.sg import enum
-from xbox.rest.consolewrap import ConsoleWrap
+
+def test_device_overview(client):
+    resp = client.test_client().get('/device')
+
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json['success'] is True
 
 
-def test_media_status(client, console, media_state):
-    console._device_status = enum.DeviceStatus.Available
-    console._connection_state = enum.ConnectionState.Connected
-    console._pairing_state = enum.PairedIdentityState.Paired
+def test_device_poweron(client, console_liveid):
+    resp = client.test_client().get('/device/{0}/poweron'.format(console_liveid))
 
-    console.media._media_state = media_state
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json['success'] is True
 
-    console_wrap = ConsoleWrap(console)
-    client.console_cache[console.liveid] = console_wrap
 
-    resp = client.test_client().get('/device/{0}/media_status'.format(console.liveid))
+def test_device_info():
+    pass
+
+
+def test_connect():
+    pass
+
+
+def test_disconnect():
+    pass
+
+
+def test_poweroff():
+    pass
+
+
+def test_launch_title():
+    pass
+
+
+def test_infrared():
+    pass
+
+
+def test_infrared_available_keys():
+    pass
+
+
+def test_infrared_send():
+    pass
+
+
+def test_media_overview():
+    pass
+
+
+def test_media_command():
+    pass
+
+
+def test_media_command_seek():
+    pass
+
+
+def test_input_overview():
+    pass
+
+
+def test_input_send_button():
+    pass
+
+
+def test_stump_headend_info():
+    pass
+
+
+def test_stump_livetv_info():
+    pass
+
+
+def test_stump_tuner_lineups():
+    pass
+
+
+def test_text_overview():
+    pass
+
+
+def test_text_send():
+    pass
+
+
+def test_media_status(client_connected_media_console_status, console_liveid):
+    client = client_connected_media_console_status
+    resp = client.test_client().get('/device/{0}/media_status'.format(console_liveid))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp.json['success'] is True
     assert resp.json['media_status'] is not None
+    media_status = resp.json['media_status']
+
+    assert media_status['title_id'] == 274278798
+    assert media_status['aum_id'] == 'AIVDE_s9eep9cpjhg6g!App'
+    assert media_status['asset_id'] == ''
+    assert media_status['media_type'] == 'Video'
+    assert media_status['sound_level'] == 'Full'
+    assert media_status['enabled_commands'] == 6
+    assert media_status['playback_status'] == 'Playing'
+    assert media_status['rate'] == 1.00
+    assert media_status['position'] == 0
+    assert media_status['media_start'] == 0
+    assert media_status['media_end'] == 0
+    assert media_status['min_seek'] == 0
+    assert media_status['max_seek'] == 0
+    assert media_status['metadata'] is not None
+    metadata = media_status['metadata']
+
+    assert len(metadata) == 2
+    assert 'title' in metadata
+    assert 'subtitle' in metadata
+    assert metadata['title'] == 'Some Movietitle'
+    assert metadata['subtitle'] == ''
 
 
-def test_console_status(client, console, console_status):
-    console._device_status = enum.DeviceStatus.Available
-    console._connection_state = enum.ConnectionState.Connected
-    console._pairing_state = enum.PairedIdentityState.Paired
-
-    console._console_status = console_status
-
-    console_wrap = ConsoleWrap(console)
-    client.console_cache[console.liveid] = console_wrap
-
-    resp = client.test_client().get('/device/{0}/console_status'.format(console.liveid))
+def test_console_status(client_connected_media_console_status, console_liveid):
+    client = client_connected_media_console_status
+    resp = client.test_client().get('/device/{0}/console_status'.format(console_liveid))
 
     assert resp.status_code == HTTPStatus.OK
     assert resp.json['success'] is True
@@ -53,4 +143,3 @@ def test_console_status(client, console, console_status):
     assert active_title['title_location'] == 'StartView'
     assert active_title['product_id'] == '00000000-0000-0000-0000-000000000000'
     assert active_title['sandbox_id'] == '00000000-0000-0000-0000-000000000000'
-

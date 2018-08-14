@@ -10,6 +10,7 @@ from xbox.sg.manager import MediaManager, TextManager, InputManager
 from xbox.stump.manager import StumpManager
 
 from xbox.rest.app import app
+from xbox.rest.consolewrap import ConsoleWrap
 
 
 @pytest.fixture
@@ -119,3 +120,17 @@ def console(console_address, console_name, console_uuid,
     console.add_manager(TextManager)
     console.add_manager(InputManager)
     return console
+
+
+@pytest.fixture
+def client_connected_media_console_status(client, console, media_state, console_status):
+    console._device_status = enum.DeviceStatus.Available
+    console._connection_state = enum.ConnectionState.Connected
+    console._pairing_state = enum.PairedIdentityState.Paired
+
+    console.media._media_state = media_state
+    console._console_status = console_status
+
+    console_wrap = ConsoleWrap(console)
+    client.console_cache[console.liveid] = console_wrap
+    return client
