@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 
-def test_device_overview(client):
+def test_api_overview(client):
     resp = client.test_client().get('/')
 
     assert resp.status_code == HTTPStatus.OK

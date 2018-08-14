@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 
-def test_device_overview(client):
+def test_versions(client):
     resp = client.test_client().get('/versions')
 
     assert resp.status_code == HTTPStatus.OK
