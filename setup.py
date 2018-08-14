@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name="xbox-smartglass-rest",
-    version="0.9.3",
+    version="0.9.4",
     author="OpenXbox",
     description="Xbox One Smartglass REST API",
     long_description=open('README.rst').read() + '\n\n' + open('HISTORY.rst').read(),
