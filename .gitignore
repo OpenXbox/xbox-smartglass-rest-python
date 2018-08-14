@@ -58,8 +58,14 @@ docs/_build/
 # PyBuilder
 target/
 
+# PyTest
+.pytest_cache/
+
 # Intellij
 .idea/
+
+# VS Code
+.vscode/
 
 # Node
 node_modules

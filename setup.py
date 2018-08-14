@@ -15,10 +15,12 @@ setup(
     url="https://github.com/OpenXbox/xbox-smartglass-rest-python",
     packages=[
         'xbox.rest',
+        'xbox.rest.routes',
         'xbox.rest.scripts'
     ],
     namespace_packages=['xbox'],
     zip_safe=False,
+    include_package_data=True,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
