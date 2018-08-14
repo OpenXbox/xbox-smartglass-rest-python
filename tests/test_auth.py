@@ -28,6 +28,7 @@ def test_auth_login_get(client):
     assert resp.json is None
     assert b'Authenticate with Windows Live' in resp.data
 
+
 def test_auth_login_post_no_params(client):
     # No post params
     resp = client.test_client().post('/auth/login')
