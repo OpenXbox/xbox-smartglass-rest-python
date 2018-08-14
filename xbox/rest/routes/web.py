@@ -1,5 +1,5 @@
 from flask import current_app as app
-from flask import jsonify
+from flask import request, jsonify
 from ..decorators import require_authentication
 from . import routes
 
@@ -20,7 +20,17 @@ def download_title_info(client, title_id):
 @require_authentication
 def download_title_history(client):
     try:
-        resp = client.titlehub.get_title_history(app.xbl_client.xuid).json()
+        max_items = request.args.get('max_items') or 5
+        resp = client.titlehub.get_title_history(app.xbl_client.xuid, max_items=max_items).json()
         return jsonify(resp)
     except Exception as e:
         return app.error('Download of titlehistory failed, error: {0}'.format(e))
+
+@routes.route('/web/pins')
+@require_authentication
+def download_pins(client):
+    try:
+        resp = client.lists.get_items(app.xbl_client.xuid, {}).json()
+        return jsonify(resp)
+    except Exception as e:
+        return app.error('Download of pins failed, error: {0}'.format(e))

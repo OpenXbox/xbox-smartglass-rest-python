@@ -55,7 +55,7 @@ def force_connect(console):
     try:
         userhash = ''
         xtoken = ''
-        if app.authentication_mgr.authenticated:
+        if app.authentication_mgr.authenticated and not request.args.get('anonymous'):
             userhash = app.authentication_mgr.userinfo.userhash
             xtoken = app.authentication_mgr.xsts_token.jwt
         state = console.connect(userhash, xtoken)

@@ -58,6 +58,9 @@ docs/_build/
 # PyBuilder
 target/
 
+# PyTest
+.pytest_cache/
+
 # Intellij
 .idea/
 
