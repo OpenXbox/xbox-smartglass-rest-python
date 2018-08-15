@@ -89,6 +89,19 @@ def active_title():
     )
     return struct
 
+@pytest.fixture(scope='session')
+def active_media_title():
+    struct = message._active_title(
+        title_id=714681658,
+        product_id=uuid.UUID('00000000-0000-0000-0000-000000000000'),
+        sandbox_id=uuid.UUID('00000000-0000-0000-0000-000000000000'),
+        aum='AIVDE_s9eep9cpjhg6g!App',
+        disposition=Container(
+            has_focus=True,
+            title_location=enum.ActiveTitleLocation.StartView
+        )
+    )
+    return struct
 
 @pytest.fixture(scope='session')
 def console_status(active_title):
@@ -100,6 +113,19 @@ def console_status(active_title):
         locale='en-US',
         active_titles=[
             active_title
+        ]
+    )
+
+@pytest.fixture(scope='session')
+def console_status_with_media(active_media_title):
+    return message.console_status(
+        live_tv_provider=0,
+        major_version=10,
+        minor_version=0,
+        build_number=14393,
+        locale='en-US',
+        active_titles=[
+            active_media_title
         ]
     )
 
@@ -123,13 +149,13 @@ def console(console_address, console_name, console_uuid,
 
 
 @pytest.fixture
-def client_connected_media_console_status(client, console, media_state, console_status):
+def client_connected_media_console_status(client, console, media_state, console_status_with_media):
     console._device_status = enum.DeviceStatus.Available
     console._connection_state = enum.ConnectionState.Connected
     console._pairing_state = enum.PairedIdentityState.Paired
 
     console.media._media_state = media_state
-    console._console_status = console_status
+    console._console_status = console_status_with_media
 
     console_wrap = ConsoleWrap(console)
     client.console_cache[console.liveid] = console_wrap

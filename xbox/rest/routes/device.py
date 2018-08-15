@@ -98,10 +98,15 @@ def console_status(console):
     if client and status:
         for t in status['active_titles']:
             try:
-                resp = client.titlehub.get_title_info(t['title_id'], 'image').json()
+                title_id = t['title_id']
+                resp = app.title_cache.get(title_id)
+                if not resp:
+                    resp = client.titlehub.get_title_info(title_id, 'image').json()
                 if resp['titles'][0]:
+                    app.title_cache[title_id] = resp
                     t['name'] = resp['titles'][0]['name']
                     t['image'] = resp['titles'][0]['displayImage']
+                    t['type'] = resp['titles'][0]['type']
             except:
                 pass
     return app.success(console_status=status)

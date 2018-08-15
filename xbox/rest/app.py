@@ -10,6 +10,7 @@ class SmartGlassFlaskApp(Flask):
         super(SmartGlassFlaskApp, self).__init__(name)
 
         self.console_cache = {}
+        self.title_cache = {}
         self.authentication_mgr = AuthenticationManager()
         self.token_file = None
         self._xbl_client = None

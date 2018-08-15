@@ -159,15 +159,21 @@ def test_console_status(console, console_status):
     assert 'active_titles' in status
 
 
-def test_media_status(console, media_state):
+def test_media_status(console, media_state, console_status, console_status_with_media):
     console.media._media_state = None
     assert ConsoleWrap(console).media_status is None
 
     console.media._media_state = media_state
+    console._console_status = console_status_with_media
     console._connection_state = enum.ConnectionState.Disconnecting
     assert ConsoleWrap(console).media_status is None
 
+    console._console_status = console_status # miss-matched apps
     console._connection_state = enum.ConnectionState.Connected
+    state = ConsoleWrap(console).media_status
+    assert ConsoleWrap(console).media_status is None
+
+    console._console_status = console_status_with_media
     state = ConsoleWrap(console).media_status
     assert 'title_id' in state
     assert 'aum_id' in state

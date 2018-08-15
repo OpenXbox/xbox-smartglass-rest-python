@@ -144,6 +144,7 @@ class ConsoleWrap(object):
                 'aum': at.aum,
                 'name': at.aum,
                 'image': None,
+                'type': None,
                 'has_focus': at.disposition.has_focus,
                 'title_location': at.disposition.title_location.name,
                 'product_id': str(at.product_id),
@@ -160,6 +161,10 @@ class ConsoleWrap(object):
             return None
 
         media_state = self.console.media.media_state
+
+        # Ensure we are in the same app, otherwise this is useless
+        if media_state.aum_id not in [t.aum for t in self.console.console_status.active_titles]:
+            return None
 
         media_state_json = {
             'title_id': media_state.title_id,

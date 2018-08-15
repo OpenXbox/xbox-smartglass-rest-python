@@ -136,9 +136,10 @@ def test_console_status(client_connected_media_console_status, console_liveid):
     active_title = status['active_titles'][0]
 
     assert active_title['title_id'] == 714681658
-    assert active_title['aum'] == 'Xbox.Home_8wekyb3d8bbwe!Xbox.Home.Application'
-    assert active_title['name'] == 'Xbox.Home_8wekyb3d8bbwe!Xbox.Home.Application'
+    assert active_title['aum'] == 'AIVDE_s9eep9cpjhg6g!App'
+    assert active_title['name'] == 'AIVDE_s9eep9cpjhg6g!App'
     assert active_title['image'] is None
+    assert active_title['type'] is None
     assert active_title['has_focus'] is True
     assert active_title['title_location'] == 'StartView'
     assert active_title['product_id'] == '00000000-0000-0000-0000-000000000000'
