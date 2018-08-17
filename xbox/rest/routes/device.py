@@ -258,6 +258,24 @@ def text_send(console, text):
     console.send_text(text)
     return app.success()
 
+
+@routes.route('/device/<liveid>/gamedvr')
+@console_connected
+def gamedvr_record(console):
+    """
+    Default to record last 60 seconds
+    Adjust with start/end query parameter
+    (delta time in seconds)
+    """
+    try:
+        start_delta = request.args.get('start', -60)
+        end_delta = request.args.get('end', 0)
+        console.dvr_record(int(start_delta), int(end_delta))
+    except Exception as e:
+        return app.error('GameDVR failed, error: {0}'.format(e))
+
+    return app.success()
+
 """
 @routes.route('/device/<liveid>/nano')
 @console_connected

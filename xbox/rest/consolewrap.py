@@ -307,6 +307,10 @@ class ConsoleWrap(object):
         self.console.finish_text_input()
         return True
 
+    def dvr_record(self, start_delta, end_delta):
+        self.console.game_dvr_record(start_delta, end_delta)
+        return True
+
     def nano_start(self):
         self.console.nano.start_stream()
         return True
