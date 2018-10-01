@@ -8,7 +8,8 @@ from . import routes
 
 @routes.route('/device')
 def device_overview():
-    discovered = ConsoleWrap.discover().copy()
+    addr = request.args.get('addr')
+    discovered = ConsoleWrap.discover(addr=addr).copy()
 
     liveids = [d.liveid for d in discovered]
     for i, c in enumerate(app.console_cache.values()):
