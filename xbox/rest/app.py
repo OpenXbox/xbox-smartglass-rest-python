@@ -28,11 +28,11 @@ class SmartGlassFlaskApp(Flask):
 
     @property
     def xbl_client(self):
-        if self.authentication_mgr.authenticated and not self._xbl_client:
+        if self.authentication_mgr.authenticated:
             self._xbl_client = XboxLiveClient(
-                userhash=app.authentication_mgr.userinfo.userhash,
-                auth_token=app.authentication_mgr.xsts_token.jwt,
-                xuid=app.authentication_mgr.userinfo.xuid
+                userhash=self.authentication_mgr.userinfo.userhash,
+                auth_token=self.authentication_mgr.xsts_token.jwt,
+                xuid=self.authentication_mgr.userinfo.xuid
             )
         return self._xbl_client
 
