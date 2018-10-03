@@ -3,8 +3,5 @@ from . import routes
 
 @routes.route('/')
 def index():
-    routes = []
-    for rule in app.url_map.iter_rules():
-        routes.append('%s' % rule)
-
+    routes = set([str(rule) for rule in app.url_map.iter_rules()])
     return app.success(endpoints=sorted(routes))
