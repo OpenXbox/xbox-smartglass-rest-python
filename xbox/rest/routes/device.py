@@ -277,7 +277,7 @@ def gamedvr_record(console):
 
     return app.success()
 
-"""
+
 @routes.route('/device/<liveid>/nano')
 @console_connected
 def nano_overview(console):
@@ -296,4 +296,3 @@ def nano_start(console):
 def nano_stop(console):
     console.nano_stop()
     return app.success()
-"""
