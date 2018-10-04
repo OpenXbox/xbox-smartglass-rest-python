@@ -92,9 +92,10 @@ Usual usage:
     # (Optional) Poweron console
     http://localhost:5557/device/<liveid>/poweron
     # Enumerate devices on network
+    # NOTE: You can enumerate device by specific ip: /device?addr=192.168.0.123
     http://localhost:5557/device
     # Connect to console
-    # NOTE: You can POST to /connect with parameter: connect_anonymous=true
+    # NOTE: You can connect anonymously: /connect?anonymous=true
     # .. if console allows it ..
     http://localhost:5557/device/<liveid>/connect
 
