@@ -2,6 +2,16 @@
 History
 =======
 
+0.9.6 (2018-10-04)
+------------------
+
+* Return unique index endpoint
+* Create FAQ
+* Always refresh XBL Client with new tokens and implement IP in /device
+* Expose IP addr discovery through /devices?addr=192.168.0.123
+* Always refresh XBL Client with new tokens
+* Add GameDVR endpoint
+
 0.9.5 (2018-08-16)
 ------------------
 
