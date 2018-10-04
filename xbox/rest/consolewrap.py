@@ -1,8 +1,11 @@
+import logging
+
 from xbox.sg import enum
 from xbox.sg.console import Console
 from xbox.sg.manager import InputManager, TextManager, MediaManager
-from xbox.nano.manager import NanoManager
 from xbox.stump.manager import StumpManager
+
+log = logging.getLogger()
 
 class ConsoleWrap(object):
     def __init__(self, console):
@@ -16,8 +19,16 @@ class ConsoleWrap(object):
             self.console.add_manager(MediaManager)
         if 'stump' not in self.console.managers:
             self.console.add_manager(StumpManager)
-        if 'nano' not in self.console.managers:
-            self.console.add_manager(NanoManager)
+
+        try:
+            from xbox.nano.manager import NanoManager
+            if 'nano' not in self.console.managers:
+                self.console.add_manager(NanoManager)
+        except ImportError:
+            log.warning(
+                'Failed to import NanoManager (depends on xbox-smartglass-nano).'
+                ' /nano endpoint will not work!'
+            )
 
     @staticmethod
     def discover(*args, **kwargs):
