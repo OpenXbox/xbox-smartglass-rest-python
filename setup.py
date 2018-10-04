@@ -32,7 +32,6 @@ setup(
     ],
     install_requires=[
         'xbox-smartglass-stump>=0.9.4',
-        'xbox-smartglass-nano>=0.9.2',
         'Flask'
     ],
     tests_require=[
