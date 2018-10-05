@@ -6,7 +6,7 @@ You need to discover/refresh available consoles first by calling `/device` endpo
 ## Connect command `/device/<LIVEID>/connect` loads forever/does not succeed
 Throubleshoot like this:
 1. Call `/auth` endpoint and check **authenticated** boolean value, if it's **false** call `/auth/refresh`.
-  If refreshing tokens fails, logout and login again.
+  If refreshing tokens fails, logout (`/auth/logout`) and login (`/auth/login` or `/auth/oauth`) again.
 2. Refresh / rescan available consoles by calling `/device` endpoint.
 3. If connection still fails, power-cycle the console. Press the power button on the console front for 10 seconds
   to shut it down entirely. Press the power button again and wait for it to fully boot.
