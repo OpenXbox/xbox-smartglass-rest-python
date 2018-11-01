@@ -91,6 +91,7 @@ Usual usage:
 
     # (Optional) Poweron console
     http://localhost:5557/device/<liveid>/poweron
+    # NOTE: You can specify device by ip: /device/<liveid>/poweron?addr=192.168.0.123
     # Enumerate devices on network
     # NOTE: You can enumerate device by specific ip: /device?addr=192.168.0.123
     http://localhost:5557/device

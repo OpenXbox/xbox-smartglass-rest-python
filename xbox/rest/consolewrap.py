@@ -35,9 +35,9 @@ class ConsoleWrap(object):
         return Console.discover(*args, **kwargs)
 
     @staticmethod
-    def power_on(liveid):
+    def power_on(liveid, addr=None):
         for i in range(3):
-            Console.power_on(liveid, tries=10)
+            Console.power_on(liveid, addr=addr, tries=10)
             Console.wait(1)
 
     @property

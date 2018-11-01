@@ -35,7 +35,8 @@ def device_overview():
 
 @routes.route('/device/<liveid>/poweron')
 def poweron(liveid):
-    ConsoleWrap.power_on(liveid)
+    addr = request.args.get('addr')
+    ConsoleWrap.power_on(liveid, addr=addr)
     return app.success()
 
 
