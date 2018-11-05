@@ -2,6 +2,13 @@
 History
 =======
 
+0.9.7 (2018-11-05)
+------------------
+
+* Pin xbox-smartglass-core requirement
+* Filter returned consoles when addr-query is supplied
+* Expose last_error in console status
+
 0.9.6 (2018-10-04)
 ------------------
 
