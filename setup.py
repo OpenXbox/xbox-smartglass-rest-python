@@ -31,6 +31,7 @@ setup(
         "Programming Language :: Python :: 3.6"
     ],
     install_requires=[
+        'xbox-smartglass-core>=1.0.11',
         'xbox-smartglass-stump>=0.9.4',
         'Flask'
     ],
