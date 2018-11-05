@@ -1,13 +1,34 @@
-FROM resin/armv7hf-python:3.6-slim
+# Based on https://softwarejourneyman.com/docker-python-install-wheels.html
 
-RUN [ "cross-build-start" ]
-RUN apt-get update && apt-get install -y gcc libc-dev python3-dev libffi-dev libssl-dev && rm -rf /var/lib/apt/lists/*
-RUN pip install gevent==1.2.2
+ARG BUILD_FROM
 
-COPY . .
-RUN pip install -e ./
+#########################################
+# Image WITH C compiler, building wheels for next stage
+FROM ${BUILD_FROM} as bigimage
 
-EXPOSE 5557/tcp
+ENV LANG C.UTF-8
+ENV REST_SERVER_VERSION 0.9.7
 
-RUN [ "cross-build-end" ]
+# install the C compiler
+RUN apk add jq gcc musl-dev libffi-dev openssl-dev
+
+# instead of installing, create a wheel
+RUN pip wheel --wheel-dir=/root/wheels xbox-smartglass-rest==${REST_SERVER_VERSION}
+
+#########################################
+# Image WITHOUT C compiler, installing the component from wheel
+FROM ${BUILD_FROM} as smallimage
+
+RUN apk add openssl
+
+COPY --from=bigimage /root/wheels /root/wheels
+
+# Ignore the Python package index
+# and look for archives in
+# /root/wheels directory
+RUN pip install \
+      --no-index \
+      --find-links=/root/wheels \
+      xbox-smartglass-rest
+
 CMD [ "xbox-rest-server" ]
