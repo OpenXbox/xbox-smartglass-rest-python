@@ -10,7 +10,7 @@ ENV LANG C.UTF-8
 ENV REST_SERVER_VERSION 0.9.7
 
 # install the C compiler
-RUN apk add jq gcc musl-dev libffi-dev openssl-dev
+RUN apk add --no-cache jq gcc musl-dev libffi-dev openssl-dev
 
 # instead of installing, create a wheel
 RUN pip wheel --wheel-dir=/root/wheels xbox-smartglass-rest==${REST_SERVER_VERSION}
@@ -19,7 +19,7 @@ RUN pip wheel --wheel-dir=/root/wheels xbox-smartglass-rest==${REST_SERVER_VERSI
 # Image WITHOUT C compiler, installing the component from wheel
 FROM ${BUILD_FROM} as smallimage
 
-RUN apk add openssl
+RUN apk add --no-cache openssl
 
 COPY --from=bigimage /root/wheels /root/wheels
 
