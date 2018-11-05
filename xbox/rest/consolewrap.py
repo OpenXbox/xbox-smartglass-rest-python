@@ -87,6 +87,10 @@ class ConsoleWrap(object):
         return self.console.liveid
 
     @property
+    def last_error(self):
+        return self.console.last_error
+
+    @property
     def available(self):
         return bool(self.console and self.console.available)
 
@@ -211,6 +215,7 @@ class ConsoleWrap(object):
             'connection_state': self.connection_state.name,
             'pairing_state': self.pairing_state.name,
             'device_status': self.device_status.name,
+            'last_error': self.last_error,
             'authenticated_users_allowed': self.authenticated_users_allowed,
             'console_users_allowed': self.console_users_allowed,
             'anonymous_connection_allowed': self.anonymous_connection_allowed,
