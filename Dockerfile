@@ -1,10 +1,8 @@
 # Based on https://softwarejourneyman.com/docker-python-install-wheels.html
 
-ARG BUILD_FROM
-
 #########################################
 # Image WITH C compiler, building wheels for next stage
-FROM ${BUILD_FROM} as bigimage
+FROM python:3.6-alpine as bigimage
 
 ENV LANG C.UTF-8
 ENV REST_SERVER_VERSION 0.9.7
@@ -17,7 +15,7 @@ RUN pip wheel --wheel-dir=/root/wheels xbox-smartglass-rest==${REST_SERVER_VERSI
 
 #########################################
 # Image WITHOUT C compiler, installing the component from wheel
-FROM ${BUILD_FROM} as smallimage
+FROM python:3.6-alpine as smallimage
 
 RUN apk add --no-cache openssl
 
