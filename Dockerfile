@@ -5,7 +5,7 @@
 FROM python:3.6-alpine as bigimage
 
 ENV LANG C.UTF-8
-ENV REST_SERVER_VERSION 0.9.7
+ENV REST_SERVER_VERSION 0.9.8
 
 # install the C compiler
 RUN apk add --no-cache jq gcc musl-dev libffi-dev openssl-dev
