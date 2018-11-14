@@ -76,6 +76,10 @@ def authentication_login_post():
             return app.error('Login failed, 2FA required!',
                                 two_factor_required=True)
 
+    except Exception as e:
+        return app.error('Unhandled authentication error: {0}'.format(str(e)),
+                         two_factor_required=False)
+
     if is_webview:
         return render_template('auth_result.html',
                                 title='Login success',
