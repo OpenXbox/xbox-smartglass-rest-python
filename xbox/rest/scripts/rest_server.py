@@ -1,6 +1,6 @@
 from gevent import monkey
 monkey.patch_all()
-from gevent import wsgi
+from gevent import pywsgi
 from flask.logging import default_handler
 from logging.handlers import RotatingFileHandler
 
@@ -51,7 +51,7 @@ def main():
             'Failed to authenticate with tokenfile from {0}, error: {1}'.format(args.tokens, e)
         )
 
-    server = wsgi.WSGIServer((args.address, args.port), app)
+    server = pywsgi.WSGIServer((args.address, args.port), app)
     server.serve_forever()
 
 if __name__ == '__main__':
