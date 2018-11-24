@@ -5,13 +5,13 @@
 FROM python:3.6-alpine as bigimage
 
 ENV LANG C.UTF-8
-ENV REST_SERVER_VERSION 0.9.8
+
 
 # install the C compiler
 RUN apk add --no-cache jq gcc musl-dev libffi-dev openssl-dev
 
 # instead of installing, create a wheel
-RUN pip wheel --wheel-dir=/root/wheels xbox-smartglass-rest==${REST_SERVER_VERSION}
+RUN pip wheel --wheel-dir=/root/wheels .
 
 #########################################
 # Image WITHOUT C compiler, installing the component from wheel
