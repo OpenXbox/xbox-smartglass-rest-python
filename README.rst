@@ -9,6 +9,10 @@ Xbox-Smartglass-REST
 .. image:: https://travis-ci.com/OpenXbox/xbox-smartglass-rest-python.svg?branch=master
     :target: https://travis-ci.com/OpenXbox/xbox-smartglass-rest-python
 
+.. image:: https://img.shields.io/docker/build/openxbox/xbox-smartglass-rest.svg
+    :target: https://hub.docker.com/r/openxbox/xbox-smartglass-rest
+    :alt: Docker Build Status
+
 .. image:: https://img.shields.io/badge/discord-OpenXbox-blue.svg
     :target: https://discord.gg/E8kkJhQ
     :alt: Discord chat channel
