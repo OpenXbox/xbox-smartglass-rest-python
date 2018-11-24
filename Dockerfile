@@ -6,12 +6,14 @@ FROM python:3.6-alpine as bigimage
 
 ENV LANG C.UTF-8
 
+# Copy project files
+COPY . /src/rest-server
 
 # install the C compiler
 RUN apk add --no-cache jq gcc musl-dev libffi-dev openssl-dev
 
 # instead of installing, create a wheel
-RUN pip wheel --wheel-dir=/root/wheels .
+RUN pip wheel --wheel-dir=/root/wheels /src/rest-server
 
 #########################################
 # Image WITHOUT C compiler, installing the component from wheel
