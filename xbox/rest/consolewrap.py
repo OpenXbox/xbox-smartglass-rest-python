@@ -305,10 +305,10 @@ class ConsoleWrap(object):
         print(result)
         return True
 
-    def send_media_command(self, command):
+    def send_media_command(self, command, seek_position=None):
         title_id = 0
         request_id = 0
-        self.console.media_command(title_id, command, request_id)
+        self.console.media_command(title_id, command, request_id, seek_position)
         return True
 
     def send_gamepad_button(self, btn):
