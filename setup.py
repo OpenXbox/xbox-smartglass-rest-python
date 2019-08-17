@@ -33,7 +33,8 @@ setup(
     ],
     install_requires=[
         'xbox-webapi>=1.1.7',
-        'xbox-smartglass-core>=1.0.12',
+        'xbox-smartglass-core==1.0.12',
+        'urwid==2.0.1',
         'xbox-smartglass-stump>=0.9.5',
         'Flask'
     ],
